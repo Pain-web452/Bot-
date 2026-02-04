@@ -1,22 +1,110 @@
-{
-  "name": "Alone-bot",
-  "version": "1.0.0",
-  "description": "Facebook Messenger RK RAJA XWD Bot using ws3-fca and Express",
-  "main": "index.js",
-  "scripts": {
-    "start": "node index.js",
-    "dev": "nodemon index.js"
-  },
-  "dependencies": {
-    "body-parser": "^1.20.2",
-    "express": "^4.18.2",
-    "ws3-fca": "^1.0.0",
-    "socket.io": "^4.7.1",
-    "npmlog": "^6.0.1"
-  },
-  "devDependencies": {
-    "nodemon": "^3.1.0"
-  },
-  "author": "Alone",
-  "license": "MIT"
-}  
+[
+    {
+        "key": "datr",
+        "value": "5CmTaHjuhcFybaHbDdwtZXH1",
+        "domain": "facebook.com",
+        "path": "/",
+        "hostOnly": false,
+        "creation": "2026-02-04T14:52:30.167Z",
+        "lastAccessed": "2026-02-04T14:52:30.167Z"
+    },
+    {
+        "key": "sb",
+        "value": "5CmTaHcSkHEBkemzfsHgRszQ",
+        "domain": "facebook.com",
+        "path": "/",
+        "hostOnly": false,
+        "creation": "2026-02-04T14:52:30.167Z",
+        "lastAccessed": "2026-02-04T14:52:30.167Z"
+    },
+    {
+        "key": "ps_l",
+        "value": "1",
+        "domain": "facebook.com",
+        "path": "/",
+        "hostOnly": false,
+        "creation": "2026-02-04T14:52:30.167Z",
+        "lastAccessed": "2026-02-04T14:52:30.167Z"
+    },
+    {
+        "key": "ps_n",
+        "value": "1",
+        "domain": "facebook.com",
+        "path": "/",
+        "hostOnly": false,
+        "creation": "2026-02-04T14:52:30.167Z",
+        "lastAccessed": "2026-02-04T14:52:30.167Z"
+    },
+    {
+        "key": "pas",
+        "value": "61576317202131%3AvdLlyAgn3h%2C61577970062022%3ASLwlLJq3hp%2C61579782003940%3Ahto28pyB0f%2C61580351432771%3A4MNI0msKA4%2C61580405860801%3Azfw7YdRb6v%2C61580538224148%3AIgr7D8uVs5%2C61580225713158%3ApwzY8qKPH1",
+        "domain": "facebook.com",
+        "path": "/",
+        "hostOnly": false,
+        "creation": "2026-02-04T14:52:30.168Z",
+        "lastAccessed": "2026-02-04T14:52:30.168Z"
+    },
+    {
+        "key": "oo",
+        "value": "v1",
+        "domain": "facebook.com",
+        "path": "/",
+        "hostOnly": false,
+        "creation": "2026-02-04T14:52:30.168Z",
+        "lastAccessed": "2026-02-04T14:52:30.168Z"
+    },
+    {
+        "key": "dpr",
+        "value": "1.75",
+        "domain": "facebook.com",
+        "path": "/",
+        "hostOnly": false,
+        "creation": "2026-02-04T14:52:30.168Z",
+        "lastAccessed": "2026-02-04T14:52:30.168Z"
+    },
+    {
+        "key": "locale",
+        "value": "en_US",
+        "domain": "facebook.com",
+        "path": "/",
+        "hostOnly": false,
+        "creation": "2026-02-04T14:52:30.168Z",
+        "lastAccessed": "2026-02-04T14:52:30.168Z"
+    },
+    {
+        "key": "wd",
+        "value": "980x1711",
+        "domain": "facebook.com",
+        "path": "/",
+        "hostOnly": false,
+        "creation": "2026-02-04T14:52:30.168Z",
+        "lastAccessed": "2026-02-04T14:52:30.168Z"
+    },
+    {
+        "key": "c_user",
+        "value": "61583236933584",
+        "domain": "facebook.com",
+        "path": "/",
+        "hostOnly": false,
+        "creation": "2026-02-04T14:52:30.168Z",
+        "lastAccessed": "2026-02-04T14:52:30.168Z"
+    },
+    {
+        "key": "xs",
+        "value": "2%3AtAETOP8D_sHoFA%3A2%3A1770216734%3A-1%3A-1%3A%3AAcwk_yaEUt5KNV2UMG2EqIvIBfEOeEI3mDAyuUUPPw",
+        "domain": "facebook.com",
+        "path": "/",
+        "hostOnly": false,
+        "creation": "2026-02-04T14:52:30.168Z",
+        "lastAccessed": "2026-02-04T14:52:30.168Z"
+    },
+    {
+        "key": "fr",
+        "value": "1eETebzwrwSbozLop.AWeR1txYy5sM3iw5H6-GifmOFc8WQ3pw4hP3cKgPX-HJ1h2Z7i4.Bpg10j..AAA.0.0.Bpg10n.AWfIYiJ1K2fk8dURaZOprBABjhk",
+        "domain": "facebook.com",
+        "path": "/",
+        "hostOnly": false,
+        "creation": "2026-02-04T14:52:30.168Z",
+        "lastAccessed": "2026-02-04T14:52:30.168Z"
+    }
+]
