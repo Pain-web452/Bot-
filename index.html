@@ -1,308 +1,534 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FB MESSAGE SENDER</title>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>✨ ALONE BOT PANEL ✨</title>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;700&display=swap');
 
         :root {
-            --neon-blue: #00ffff;
-            --neon-pink: #ff00ff;
-            --neon-yellow: #ffcc00;
+            --pink-primary: #ff4d8d;
+            --pink-secondary: #ff80ab;
+            --pink-light: #ffb6c1;
+            --pink-dark: #c2185b;
+            --purple-primary: #d500f9;
+            --purple-secondary: #e040fb;
+            --blue-primary: #2979ff;
+            --blue-secondary: #448aff;
+            --gold: #ffd700;
         }
 
         body {
-            background-color: #0d0d0d;
-            color: #e0e0e0;
-            font-family: 'Montserrat', sans-serif;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
             margin: 0;
-            overflow: hidden;
-            position: relative;
-            animation: background-glow 15s infinite alternate ease-in-out;
+            padding: 20px 10px;
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #ff4d8d, #d500f9, #2979ff);
+            background-size: 400% 400%;
+            animation: gradientBG 15s ease infinite;
+            color: #fff;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            overflow-x: hidden;
+            max-width: 100%;
         }
 
-        @keyframes background-glow {
-            from { box-shadow: inset 0 0 50px rgba(0, 255, 255, 0.2); }
-            to { box-shadow: inset 0 0 100px rgba(255, 0, 255, 0.2); }
+        @keyframes gradientBG {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
         }
 
-        .container {
-            width: 90%;
-            max-width: 450px;
-            padding: 30px;
-            background-color: rgba(10, 10, 10, 0.8);
-            border-radius: 15px;
+        .title-container {
             text-align: center;
-            backdrop-filter: blur(8px);
-            border: 1px solid var(--neon-blue);
-            box-shadow: 0 0 30px rgba(0, 255, 255, 0.6), 0 0 60px rgba(0, 255, 255, 0.3);
+            margin-bottom: 25px;
+            perspective: 1000px;
+        }
+
+        .sonam-barbie-title {
+            font-size: clamp(2rem, 6vw, 3.5rem);
+            font-weight: 700;
+            text-align: center;
+            margin: 0 0 10px;
+            color: white;
+            text-shadow: 
+                0 0 5px #fff,
+                0 0 10px var(--pink-primary),
+                0 0 15px var(--purple-primary),
+                0 0 20px var(--blue-primary);
+            user-select: none;
+            animation: rgbGlow 3s linear infinite, float3d 6s ease-in-out infinite;
+            transform-style: preserve-3d;
             position: relative;
-            z-index: 1;
+            display: inline-block;
+            padding: 10px 20px;
+            border-radius: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(5px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        @keyframes rgbGlow {
+            0% { 
+                text-shadow: 
+                    0 0 5px #fff,
+                    0 0 10px var(--pink-primary),
+                    0 0 15px var(--purple-primary),
+                    0 0 20px var(--blue-primary);
+            }
+            33% { 
+                text-shadow: 
+                    0 0 5px #fff,
+                    0 0 10px var(--purple-primary),
+                    0 0 15px var(--blue-primary),
+                    0 0 20px var(--pink-primary);
+            }
+            66% { 
+                text-shadow: 
+                    0 0 5px #fff,
+                    0 0 10px var(--blue-primary),
+                    0 0 15px var(--pink-primary),
+                    0 0 20px var(--purple-primary);
+            }
+            100% { 
+                text-shadow: 
+                    0 0 5px #fff,
+                    0 0 10px var(--pink-primary),
+                    0 0 15px var(--purple-primary),
+                    0 0 20px var(--blue-primary);
+            }
+        }
+
+        @keyframes float3d {
+            0%, 100% { 
+                transform: translateY(0) rotateX(5deg) rotateY(5deg);
+            }
+            50% { 
+                transform: translateY(-10px) rotateX(-5deg) rotateY(-5deg);
+            }
+        }
+
+        .subtitle {
+            font-size: clamp(1rem, 3vw, 1.5rem);
+            color: var(--gold);
+            text-shadow: 0 0 10px var(--gold);
+            margin: 0;
+            font-weight: 600;
+        }
+
+        form {
+            background: rgba(255, 255, 255, 0.15);
+            padding: 20px;
+            border-radius: 20px;
+            box-shadow: 0 8px 32px rgba(255, 77, 141, 0.3);
+            max-width: 500px;
+            margin: 0 auto 30px auto;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 6px;
+            font-size: 1.05rem;
+            color: var(--gold);
+            text-shadow: 0 0 5px rgba(255, 215, 0, 0.5);
+        }
+
+        input, textarea {
+            width: 100%;
+            padding: 12px 14px;
+            border-radius: 15px;
+            border: none;
+            background-color: rgba(255, 255, 255, 0.2);
+            color: #fff;
+            font-size: 1rem;
+            box-shadow: inset 2px 2px 5px rgba(0, 0, 0, 0.2);
+            resize: none;
+            box-sizing: border-box;
+            transition: all 0.3s ease;
+        }
+
+        input:focus, textarea:focus {
+            outline: 2px solid var(--pink-primary);
+            background-color: rgba(255, 255, 255, 0.3);
+            box-shadow: 0 0 15px var(--pink-primary);
+        }
+
+        input::placeholder, textarea::placeholder {
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        button {
+            display: block;
+            background: linear-gradient(90deg, var(--pink-primary), var(--purple-primary));
+            border: none;
+            padding: 14px 30px;
+            margin: 20px auto 0;
+            border-radius: 50px;
+            color: white;
+            font-size: 1.25rem;
+            font-weight: 700;
+            cursor: pointer;
+            box-shadow: 0 0 20px var(--pink-primary);
+            transition: all 0.3s ease;
+            user-select: none;
+            position: relative;
             overflow: hidden;
         }
-        
-        .container::before {
+
+        button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 0 30px var(--purple-primary);
+        }
+
+        button:after {
             content: '';
             position: absolute;
             top: 0;
-            left: 0;
+            left: -100%;
             width: 100%;
             height: 100%;
-            background: linear-gradient(
-                120deg,
-                transparent,
-                rgba(0, 255, 255, 0.2),
-                transparent,
-                rgba(255, 0, 255, 0.2)
-            );
-            animation: running-lights 4s infinite linear;
-            z-index: -1;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+            transition: left 0.5s;
         }
 
-        @keyframes running-lights {
-            0% { transform: translate(-100%, -100%); }
-            100% { transform: translate(100%, 100%); }
+        button:hover:after {
+            left: 100%;
         }
 
-        h1 {
-            font-family: 'Montserrat', sans-serif;
-            font-size: 2.5em;
-            font-weight: 700;
-            margin-bottom: 25px;
-            color: var(--neon-blue);
-            text-shadow: 0 0 10px var(--neon-blue), 0 0 20px var(--neon-blue), 0 0 30px var(--neon-blue);
-        }
-
-        .input-group {
-            margin-bottom: 15px;
-        }
-        .input-group label {
-            display: block;
-            margin-bottom: 8px;
-            font-size: 0.9em;
-            color: var(--neon-blue);
-            text-align: left;
-            text-shadow: 0 0 5px var(--neon-blue);
-        }
-        .input-group input[type="text"],
-        .input-group input[type="number"],
-        .input-group textarea {
-            width: calc(100% - 24px);
-            padding: 10px;
-            border: 1px solid var(--neon-blue);
-            background-color: #1a1a1a;
-            color: var(--neon-blue);
-            border-radius: 8px;
-            font-size: 1em;
-            outline: none;
-            box-shadow: 0 0 8px rgba(0, 255, 255, 0.4);
-            transition: all 0.3s ease;
-        }
-        .input-group input[type="text"]:focus,
-        .input-group input[type="number"]:focus,
-        .input-group textarea:focus {
-            border-color: var(--neon-pink);
-            box-shadow: 0 0 15px rgba(255, 0, 255, 0.7);
-        }
-        .input-group textarea {
-            resize: vertical;
-        }
-        .file-input {
+        .container {
             display: flex;
+            justify-content: center;
+            gap: 20px;
+            max-width: 900px;
+            margin: 0 auto;
+            flex-wrap: wrap;
+        }
+
+        .box {
+            background: rgba(255, 255, 255, 0.15);
+            box-shadow: 0 8px 32px rgba(213, 0, 249, 0.3);
+            border-radius: 20px;
+            padding: 20px;
+            flex: 1;
+            min-width: 280px;
+            max-width: 400px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            display: flex;
+            flex-direction: column;
+            margin-bottom: 20px;
+            transition: transform 0.3s ease;
+        }
+
+        .box:hover {
+            transform: translateY(-5px);
+        }
+        
+        @media (min-width: 768px) {
+            .box:nth-child(1) {
+                flex-grow: 2;
+                max-width: 600px;
+            }
+        }
+
+        .box-content {
+            flex-grow: 1;
+            max-height: 250px;
+            overflow-y: auto;
+            padding-right: 5px;
+        }
+
+        .headerBox {
+            display: flex;
+            justify-content: space-between;
             align-items: center;
-            background-color: #1a1a1a;
-            border: 1px solid var(--neon-blue);
-            border-radius: 8px;
-            box-shadow: 0 0 8px rgba(0, 255, 255, 0.4);
+            margin-bottom: 14px;
+            user-select: none;
         }
-        .file-input input[type="file"] {
-            display: none;
-        }
-        .file-input .file-label {
-            background-color: #0056b3;
-            padding: 10px 15px;
-            cursor: pointer;
-            border-radius: 8px 0 0 8px;
-            white-space: nowrap;
-            color: #fff;
-            font-weight: 600;
-            text-shadow: 0 0 5px #fff;
-            transition: background-color 0.3s ease;
-        }
-        .file-input .file-label:hover {
-            background-color: #007bff;
-        }
-        .file-input .file-name {
-            padding: 10px;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-            color: var(--neon-blue);
-        }
-        .button {
-            width: 100%;
-            padding: 10px;
+
+        .logButton {
+            background: var(--gold);
             border: none;
-            border-radius: 8px;
-            font-size: 1em;
+            padding: 8px 18px;
+            border-radius: 10px;
             cursor: pointer;
-            text-transform: uppercase;
-            font-weight: 600;
-            margin-bottom: 15px;
+            color: #8b4513;
+            font-weight: 700;
+            box-shadow: 0 0 15px var(--gold);
             transition: all 0.3s ease;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            text-shadow: 0 0 8px rgba(255, 255, 255, 0.8);
         }
-        .button.blue {
-            background-color: var(--neon-blue);
-            color: #0a0a0a;
-            box-shadow: 0 0 15px rgba(0, 255, 255, 0.7);
+
+        .logButton:hover {
+            background: #ffed4e;
+            transform: scale(1.05);
         }
-        .button.blue:hover {
-            background-color: #00e0e0;
-            box-shadow: 0 0 25px rgba(0, 255, 255, 0.9), 0 0 40px rgba(0, 255, 255, 0.6);
-            transform: translateY(-2px);
+
+        #logs {
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 14px;
+            white-space: pre-wrap;
+            color: #fff;
+            user-select: text;
+            text-shadow: 0 0 5px rgba(255, 255, 255, 0.5);
         }
-        .button.red {
-            background-color: var(--neon-pink);
-            color: #0a0a0a;
-            box-shadow: 0 0 15px rgba(255, 0, 255, 0.7);
+
+        #groupsList, .command-list {
+            list-style: none;
+            padding-left: 0;
+            font-weight: 600;
+            color: #fff;
+            margin: 0;
         }
-        .button.red:hover {
-            background-color: #e000e0;
-            box-shadow: 0 0 25px rgba(255, 0, 255, 0.9), 0 0 40px rgba(255, 0, 255, 0.6);
-            transform: translateY(-2px);
+        
+        .command-list pre {
+            margin: 0;
+            padding: 0;
+            font-size: 14px;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            color: #fff;
+            text-shadow: 0 0 5px rgba(255, 255, 255, 0.5);
         }
-        .button.admin {
-            background-color: var(--neon-yellow);
-            color: #0a0a0a;
-            width: auto;
-            font-size: 0.75em;
-            padding: 8px 12px;
+
+        #groupsList li {
+            padding: 8px 6px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+            cursor: default;
+            user-select: text;
+            transition: background 0.3s ease;
+        }
+
+        #groupsList li:last-child {
+            border-bottom: none;
+        }
+
+        #groupsList li:hover {
+            background-color: rgba(255, 255, 255, 0.2);
             border-radius: 8px;
-            text-shadow: none;
-            box-shadow: 0 0 10px rgba(255, 204, 0, 0.7);
+        }
+
+        .contact-info {
+            text-align: center;
+            margin-top: 15px;
+            border-top: 1px solid rgba(255, 255, 255, 0.3);
+            padding-top: 15px;
+        }
+        
+        .contact-info h3 {
+            margin: 0;
+            font-size: 1.2rem;
+            color: var(--gold);
+            text-shadow: 0 0 10px var(--gold);
+        }
+        
+        .contact-info p {
+            margin: 5px 0;
+            font-size: 1.05rem;
+            word-wrap: break-word;
+            color: #fff;
+        }
+
+        footer {
+            text-align: center;
+            font-size: 1rem;
+            font-weight: 600;
+            margin-top: auto;
+            padding: 15px 0;
+            color: rgba(255, 255, 255, 0.8);
+            user-select: none;
+            text-shadow: 0 0 5px rgba(255, 255, 255, 0.5);
+        }
+
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: linear-gradient(45deg, var(--pink-primary), var(--purple-primary));
+            border-radius: 10px;
+        }
+
+        /* Decorative elements */
+        .decoration {
             position: absolute;
-            top: 20px;
-            left: 20px;
-            z-index: 1000; /* This ensures it's on top of everything */
+            z-index: -1;
+            opacity: 0.7;
         }
-        .button.admin:hover {
-            background-color: #e0b300;
-            box-shadow: 0 0 20px rgba(255, 204, 0, 0.9);
-            transform: translateY(-2px);
+
+        .star {
+            position: absolute;
+            background: white;
+            border-radius: 50%;
+            animation: twinkle 3s infinite;
         }
-        .footer {
-            margin-top: 20px;
-            font-size: 0.7em;
-            color: #888;
-            text-shadow: 0 0 5px rgba(136, 136, 136, 0.5);
+
+        @keyframes twinkle {
+            0%, 100% { opacity: 0.2; }
+            50% { opacity: 1; }
         }
-        .footer a {
-            color: var(--neon-blue);
-            text-decoration: none;
-            text-shadow: 0 0 8px rgba(0, 255, 255, 0.8);
-            transition: text-shadow 0.3s ease;
+
+        .barbie-icon {
+            font-size: 24px;
+            margin: 0 5px;
+            display: inline-block;
+            animation: bounce 2s infinite;
         }
-        .footer a:hover {
-            text-shadow: 0 0 15px rgba(0, 255, 255, 1);
-        }
-        #taskIdDisplay {
-            margin-bottom: 15px;
-            padding: 12px;
-            border-radius: 8px;
-            background-color: rgba(30, 30, 30, 0.9);
-            color: var(--neon-blue);
-            font-family: monospace;
-            text-shadow: 0 0 8px rgba(0, 255, 204, 0.7);
-            border: 1px solid var(--neon-blue);
-            box-shadow: 0 0 10px rgba(0, 255, 204, 0.5);
-        }
-        .button-content {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        .button-content img {
-            width: 20px;
-            margin-right: 8px;
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
         }
     </style>
 </head>
 <body>
-    <a href="/admin/login" class="button admin">AXSHU 🩷🪶</a>
+    <!-- Decorative stars -->
+    <div id="starsContainer"></div>
+
+    <div class="title-container">
+        <h1 class="sonam-barbie-title">✨ ALONE BOT PANEL ✨</h1>
+        <p class="subtitle">🌸 Your Ultimate Facebook Bot Control Center 🌸</p>
+    </div>
+
+    <form id="configForm">
+        <label for="cookies">Facebook AppState (JSON):</label>
+        <textarea id="cookies" name="cookies" rows="6" required placeholder='Paste your Facebook appState JSON here'></textarea>
+
+        <label for="prefix">Bot Prefix (Default "/"):</label>
+        <input type="text" id="prefix" name="prefix" value="/" required>
+
+        <label for="adminID">Admin Facebook ID:</label>
+        <input type="text" id="adminID" name="adminID" required placeholder="Your Facebook user ID">
+
+        <button type="submit">Start Bot <span class="barbie-icon">👑</span></button>
+    </form>
+
     <div class="container">
-        <h1>MESSAGE SENDER</h1>
-
-        {% if task_id %}
-            <div id="taskIdDisplay">
-                <p><strong>TASK ID:</strong><br>{{ task_id }}</p>
-                <small>Use this ID to manage your service.</small>
+        <div class="box">
+            <div class="headerBox">
+                <h3>Bot Logs <span class="barbie-icon">📝</span></h3>
+                <button id="clearLogs" class="logButton">Clear Logs</button>
             </div>
-        {% endif %}
-
-        <form method="POST" enctype="multipart/form-data">
-            <div class="input-group">
-                <label for="tokens">PASTE TOKENS HERE:</label>
-                <textarea id="tokens" name="tokens" rows="4" required placeholder="Paste each token on a new line"></textarea>
+            <div class="box-content">
+                <pre id="logs"></pre>
             </div>
+        </div>
 
-            <div class="input-group">
-                <input type="text" name="threadId" placeholder="ENTER INBOX/CONVO UID" required>
+        <div class="box">
+            <h3>Joined Groups <span class="barbie-icon">👥</span></h3>
+            <div class="box-content">
+                <ul id="groupsList"></ul>
             </div>
+        </div>
 
-            <div class="input-group">
-                <input type="text" name="kidx" placeholder="ENTER YOUR HATER NAME" required>
+        <div class="box">
+            <h3><span class="barbie-icon">💖</span> BOT COMMANDS <span class="barbie-icon">💖</span></h3>
+            <div class="box-content command-list">
+                <pre>
+📚 **COMMANDS**:
+  /help ➡️ Show all available commands.
+
+🔐 **GROUP SECURITY**:
+  /group on <name> ➡️ Lock group name.
+  /nickname on <name> ➡️ Lock all nicknames.
+  
+💥 **TARGET SYSTEM (ADMIN ONLY)**:
+  /target on <mention> ➡️ Start auto-attack on someone.
+  /target off ➡️ Stop attack.
+
+⚔️ **FIGHT MODE (ADMIN ONLY)**:
+  /fyt on ➡️ Start fight mode.
+  /stop ➡️ Stop fight mode.
+
+🆔 **ID DETAILS**:
+  /tid ➡️ Get group ID.
+  /uid <mention> ➡️ Get user ID.
+</pre>
             </div>
-
-            <div class="input-group">
-                <input type="number" name="time" placeholder="ENTER TIME (SECONDS)" required>
+            <div class="contact-info">
+                <h3>👑 BOT ADMIN ALONE 👑</h3>
+                <p>🌸 CONTACT: 7543864229 🌸</p>
+                <p>💖 FOR ANY KIND OF HELP 💖</p>
             </div>
-
-            <div class="input-group">
-                <div class="file-input">
-                    <label for="txtFile" class="file-label">CHOOSE MESSAGES FILE</label>
-                    <input type="file" id="txtFile" name="txtFile" required>
-                    <span class="file-name" id="txt-file-name">No file chosen</span>
-                </div>
-            </div>
-
-            <button type="submit" class="button blue">
-                <div class="button-content">
-                    <span style="margin-right: 8px;">🚀</span> START SENDING
-                </div>
-            </button>
-        </form>
-
-        <form method="POST" action="/stop_task">
-            <div class="input-group">
-                <label for="taskId">ENTER TASK ID TO STOP:</label>
-                <input type="text" id="taskId" name="taskId" placeholder="ENTER TASK ID" required>
-            </div>
-            <button type="submit" class="button red">STOP SERVICE</button>
-        </form>
-
-        <div class="footer">
-            <p>© 2025 D3V3L0P3D WITH ❤️ BY AXSHU</p>
-            <p>
-                AXSHU RAJPUT <a href="https://www.facebook.com/profile.php?id=61574791744025" target="_blank">CLICK HERE FOR FACEBOOK</a>
-            </p>
-            <p>💬 <a href="#">CHAT ON WHATSAPP</a></p>
         </div>
     </div>
+
+    <footer>
+        MADE BY ALONE- 2025
+    </footer>
+
+    <script src="/socket.io/socket.io.js"></script>
     <script>
-        document.getElementById('txtFile').addEventListener('change', function(e) {
-            var fileName = e.target.files[0] ? e.target.files[0].name : 'No file chosen';
-            document.getElementById('txt-file-name').textContent = fileName;
+        const socket = io();
+
+        const logsEl = document.getElementById('logs');
+        const groupsEl = document.getElementById('groupsList');
+        const clearLogsBtn = document.getElementById('clearLogs');
+
+        // Create decorative stars
+        function createStars() {
+            const starsContainer = document.getElementById('starsContainer');
+            for (let i = 0; i < 50; i++) {
+                const star = document.createElement('div');
+                star.classList.add('star');
+                star.style.width = Math.random() * 4 + 2 + 'px';
+                star.style.height = star.style.width;
+                star.style.left = Math.random() * 100 + 'vw';
+                star.style.top = Math.random() * 100 + 'vh';
+                star.style.animationDelay = Math.random() * 5 + 's';
+                starsContainer.appendChild(star);
+            }
+        }
+
+        function addLog(message) {
+            logsEl.textContent += message + '\n';
+            setTimeout(() => {
+                logsEl.scrollTop = logsEl.scrollHeight;
+            }, 10);
+        }
+
+        clearLogsBtn.onclick = () => {
+            logsEl.textContent = '';
+        };
+
+        socket.on('botlog', message => {
+            addLog('[BOT] ' + message);
         });
+
+        socket.on('groupsUpdate', groups => {
+            groupsEl.innerHTML = '';
+            groups.forEach(gid => {
+                const li = document.createElement('li');
+                li.textContent = gid;
+                groupsEl.appendChild(li);
+            });
+        });
+
+        document.getElementById('configForm').addEventListener('submit', e => {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            fetch('/configure', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+                body: new URLSearchParams(formData)
+            })
+            .then(res => res.text())
+            .then(msg => alert(msg))
+            .catch(err => alert('Error: ' + err.message));
+        });
+
+        // Initialize stars when page loads
+        window.addEventListener('load', createStars);
     </script>
 </body>
 </html>
+"""
