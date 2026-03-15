@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Admin Panel</title>
+</head>
+
+<body>
+
+<h1>Admin Controls</h1>
+
+<input id="thread" placeholder="Thread ID">
+<input id="name" placeholder="Group Name">
+
+<button onclick="lockName()">Lock Group Name</button>
+
+<script>
+
+async function lockName(){
+
+let threadId=document.getElementById("thread").value
+let name=document.getElementById("name").value
+
+await fetch("/lockname",{
+method:"POST",
+headers:{"Content-Type":"application/json"},
+body:JSON.stringify({threadId,name})
+})
+
+alert("Group Name Locked")
+
+}
+
+</script>
+
+</body>
+</html>
