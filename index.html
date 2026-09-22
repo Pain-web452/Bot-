@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jerry Bot Panel</title>
+    <link href="https://googleapis.com" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <div class="panel-container">
+        <div class="panel-header">
+            <span class="bot-icon">🤖</span>
+            <h1>Jerry Bot Panel</h1>
+        </div>
+
+        <div class="input-field-wrapper">
+            <label>Bot Token / Page Access Token</label>
+            <input type="text" id="botToken" placeholder="Enter Token ID">
+        </div>
+
+        <div class="input-field-wrapper">
+            <label>Owner ID / Admin ID</label>
+            <input type="text" id="ownerId" placeholder="Enter Owner ID">
+        </div>
+
+        <div class="button-group">
+            <button id="startBtn" class="btn btn-start">Start Bot</button>
+            <button id="stopBtn" class="btn btn-stop">Stop Bot</button>
+        </div>
+
+        <div class="status-container">
+            <p>Status: <span id="statusText" class="status-stopped">Stopped</span> <span id="statusDot" class="dot-red"></span></p>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
