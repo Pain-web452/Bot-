@@ -1,169 +1,135 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="hi">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HASHIRAMA Bot Panel</title>
+    <title>HASHIRAMA BOT PENAL</title>
+    <link href="https://googleapis.com" rel="stylesheet">
     <style>
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            font-family: 'Courier New', Courier, monospace;
-        }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Poppins', sans-serif; }
         body {
-            background-color: #000000;
-            color: #ffffff;
+            background-color: #d600d6;
+            background-image: radial-gradient(circle, #f000f0 10%, #bd00bd 90%);
+            min-height: 100vh;
             display: flex;
             justify-content: center;
             align-items: center;
-            min-height: 100vh;
             padding: 20px;
+            position: relative;
+            overflow-x: hidden;
         }
+        body::before, body::after {
+            content: "✨"; position: absolute; color: rgba(255, 255, 255, 0.6); font-size: 24px;
+        }
+        body::before { top: 15%; left: 10%; }
+        body::after { bottom: 20%; right: 12%; }
+        
         .panel-container {
-            width: 100%;
-            max-width: 500px;
-            background: #050a12;
-            border: 3px solid #00d2ff;
-            border-radius: 15px;
-            padding: 30px;
-            box-shadow: 0 0 20px #00d2ff, inset 0 0 10px #00d2ff;
+            width: 100%; max-width: 450px;
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+            border: 2px solid rgba(255, 255, 255, 0.25); border-radius: 25px;
+            padding: 30px 20px; box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2); text-align: center;
         }
-        h1 {
-            text-align: center;
-            color: #00d2ff;
-            font-size: 28px;
-            letter-spacing: 3px;
-            margin-bottom: 30px;
-            text-shadow: 0 0 10px #00d2ff;
+        .header-box {
+            background: rgba(255, 255, 255, 0.1); border: 2px solid rgba(255, 255, 255, 0.2);
+            border-radius: 20px; padding: 15px 10px; margin-bottom: 25px;
         }
-        .form-group {
-            margin-bottom: 20px;
+        .header-title {
+            color: #ffffff; font-size: 24px; font-weight: 700;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3); line-height: 1.4;
         }
-        label {
-            display: block;
-            font-size: 12px;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            color: #a0c0d0;
-            margin-bottom: 8px;
+        .sub-heading {
+            color: #ffff00; font-size: 14px; font-weight: 600; margin-bottom: 30px;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
         }
-        input, textarea {
-            width: 100%;
-            background: #000000;
-            border: 2px solid #00d2ff;
-            border-radius: 8px;
-            padding: 12px;
-            color: #ffffff;
-            font-size: 14px;
-            outline: none;
-            box-shadow: inset 0 0 5px rgba(0, 210, 255, 0.2);
+        .form-group { text-align: left; margin-bottom: 22px; }
+        .form-label { display: block; color: #ffff00; font-size: 15px; font-weight: 600; margin-bottom: 8px; }
+        .form-input, .form-textarea {
+            width: 100%; background: rgba(255, 255, 255, 0.2); border: 1px solid rgba(255, 255, 255, 0.4);
+            border-radius: 15px; padding: 12px 15px; color: #ffffff; font-size: 14px; outline: none;
         }
-        input:focus, textarea:focus {
-            box-shadow: 0 0 10px #00d2ff, inset 0 0 5px #00d2ff;
+        .form-textarea { resize: none; height: 120px; }
+        .form-input::placeholder, .form-textarea::placeholder { color: rgba(255, 255, 255, 0.7); }
+        
+        .start-btn {
+            background: linear-gradient(135deg, #ff007f, #ff00ff);
+            border: 2px solid rgba(255, 255, 255, 0.4); border-radius: 30px;
+            color: #ffffff; font-size: 18px; font-weight: 600; padding: 12px 40px;
+            cursor: pointer; box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2); margin-top: 10px;
         }
-        textarea {
-            resize: none;
-            height: 100px;
-        }
-        .btn-start {
-            width: 100%;
-            background: #00d2ff;
-            color: #000000;
-            border: none;
-            border-radius: 8px;
-            padding: 15px;
-            font-size: 18px;
-            font-weight: bold;
-            cursor: pointer;
-            letter-spacing: 2px;
-            text-transform: uppercase;
-            box-shadow: 0 0 15px #00d2ff;
-            transition: all 0.3s ease;
-            margin-top: 10px;
-        }
-        .btn-start:hover {
-            background: #ffffff;
-            box-shadow: 0 0 25px #ffffff;
-        }
-        #response-msg {
-            margin-top: 15px;
-            text-align: center;
-            font-size: 14px;
-            font-weight: bold;
+        .start-btn:hover { background: linear-gradient(135deg, #ff1a8c, #ff33ff); }
+        
+        /* स्टेटस रिस्पॉन्स मैसेज एरिया */
+        #statusMessage {
+            margin-top: 15px; font-size: 14px; font-weight: 600; color: #ffffff;
         }
     </style>
 </head>
 <body>
 
-<div class="panel-container">
-    <h1>FACEBOOK BOT</h1>
-    
-    <div class="form-group">
-        <label>Account Session (Cookies)</label>
-        <textarea id="cookies" placeholder="PASTE COOKIES JSON..."></textarea>
+    <div class="panel-container">
+        <div class="header-box">
+            <h1 class="header-title">✨ 🌹❤️ARJUN THAKUR BOT PENAL ❤️🌹 ✨</h1>
+        </div>
+
+        <div class="sub-heading">🌸 Your Ultimate Facebook Bot Control Center 🌸</div>
+
+        <form id="botForm">
+            <div class="form-group">
+                <label class="form-label">Facebook AppState (JSON):</label>
+                <textarea class="form-textarea" id="appState" placeholder="Paste your Facebook appState JSON here" required></textarea>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Bot Prefix (Default "/"):</label>
+                <input class="form-input" type="text" id="botPrefix" value="/">
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Admin Facebook ID:</label>
+                <input class="form-input" type="text" id="adminId" placeholder="Your Facebook user ID" required>
+            </div>
+
+            <button type="submit" class="start-btn">Start Bot 👑</button>
+        </form>
+
+        <div id="statusMessage"></div>
     </div>
 
-    <div class="form-group">
-        <label>Enter Group UID</label>
-        <input type="text" id="groupUid" placeholder="TARGET GROUP ID">
-    </div>
+    <script>
+        document.getElementById('botForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const statusDiv = document.getElementById('statusMessage');
+            statusDiv.innerText = "बोट स्टार्ट हो रहा है, कृपया प्रतीक्षा करें...";
+            statusDiv.style.color = "#ffff00";
 
-    <div class="form-group">
-        <label>Enter Group Name</label>
-        <input type="text" id="groupName" placeholder="GROUP NAME LOCK">
-    </div>
+            const payload = {
+                appState: document.getElementById('appState').value,
+                prefix: document.getElementById('botPrefix').value,
+                adminId: document.getElementById('adminId').value
+            };
 
-    <div class="form-group">
-        <label>Select All Nickname (All)</label>
-        <input type="text" id="nicknameLock" placeholder="ENTER ALL NICKNAME LOCK">
-    </div>
+            try {
+                const response = await fetch('/api/start-bot', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const result = await response.json();
 
-    <div class="form-group">
-        <label>Enter Speed (Second)</label>
-        <input type="number" id="speed" value="10" placeholder="10">
-    </div>
-
-    <button class="btn-start" onclick="startFacebookBot()">Start Bot..!!</button>
-    
-    <div id="response-msg"></div>
-</div>
-
-<script>
-    async function startFacebookBot() {
-        const msgDiv = document.getElementById('response-msg');
-        msgDiv.innerHTML = "Processing...";
-        msgDiv.style.color = "#00d2ff";
-
-        const payload = {
-            cookies: document.getElementById('cookies').value,
-            groupUid: document.getElementById('groupUid').value,
-            groupName: document.getElementById('groupName').value,
-            nicknameLock: document.getElementById('nicknameLock').value,
-            speed: document.getElementById('speed').value
-        };
-
-        try {
-            const response = await fetch('/api/start-bot', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
-            });
-            const result = await response.json();
-            
-            if(result.success) {
-                msgDiv.innerHTML = result.message;
-                msgDiv.style.color = "#00ffcc";
-            } else {
-                msgDiv.innerHTML = result.message;
-                msgDiv.style.color = "#ff3366";
+                if (result.success) {
+                    statusDiv.innerText = "🟢 " + result.message;
+                    statusDiv.style.color = "#00ff00";
+                } else {
+                    statusDiv.innerText = "🔴 " + result.message;
+                    statusDiv.style.color = "#ff3333";
+                }
+            } catch (err) {
+                statusDiv.innerText = "🔴 सर्वर से कनेक्ट करने में खराबी आई!";
+                statusDiv.style.color = "#ff3333";
             }
-        } catch (error) {
-            msgDiv.innerHTML = "🚨 Server connection error!";
-            msgDiv.style.color = "#ff3366";
-        }
-    }
-</script>
-
+        });
+    </script>
 </body>
 </html>
