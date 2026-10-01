@@ -1,35 +1,13 @@
 {
-  "name": "fb-unbreakable-neon-bot-panel",
-  "version": "2.0.0",
-  "description": "Advanced Facebook Automation Engine with Proxy Rotation and Anti-Ban Jitter Security",
+  "name": "arjun-thakur-fb-bot",
+  "version": "1.0.0",
+  "description": "Facebook Bot Control Panel",
   "main": "server.js",
   "scripts": {
-    "start": "node server.js",
-    "dev": "nodemon server.js",
-    "secure-run": "pm2 start server.js --name 'secure-fb-bot' --watch"
+    "start": "node server.js"
   },
-  "keywords": [
-    "facebook-bot",
-    "anti-ban",
-    "neon-panel",
-    "gc-lock",
-    "unbreakable-security"
-  ],
-  "author": "Nadeem Brand Premium Developer",
-  "license": "MIT",
   "dependencies": {
     "express": "^4.19.2",
-    "axios": "^1.7.2",
-    "dotenv": "^16.4.5",
-    "cors": "^2.8.5",
-    "helmet": "^7.1.0",
-    "express-rate-limit": "^7.3.1",
-    "user-agents": "^1.1.246",
-    "https-proxy-agent": "^7.0.5",
-    "lodash": "^4.17.21",
-    "uuid": "^10.0.0"
-  },
-  "devDependencies": {
-    "nodemon": "^3.1.4"
+    "fca-project-or-any-active-fca": "^1.1.8"
   }
 }
