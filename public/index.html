@@ -1,135 +1,93 @@
 <!DOCTYPE html>
-<html lang="hi">
+<html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HASHIRAMA BOT PENAL</title>
-    <link href="https://googleapis.com" rel="stylesheet">
-    <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Poppins', sans-serif; }
-        body {
-            background-color: #d600d6;
-            background-image: radial-gradient(circle, #f000f0 10%, #bd00bd 90%);
-            min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            padding: 20px;
-            position: relative;
-            overflow-x: hidden;
-        }
-        body::before, body::after {
-            content: "✨"; position: absolute; color: rgba(255, 255, 255, 0.6); font-size: 24px;
-        }
-        body::before { top: 15%; left: 10%; }
-        body::after { bottom: 20%; right: 12%; }
-        
-        .panel-container {
-            width: 100%; max-width: 450px;
-            background: rgba(255, 255, 255, 0.15);
-            backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
-            border: 2px solid rgba(255, 255, 255, 0.25); border-radius: 25px;
-            padding: 30px 20px; box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2); text-align: center;
-        }
-        .header-box {
-            background: rgba(255, 255, 255, 0.1); border: 2px solid rgba(255, 255, 255, 0.2);
-            border-radius: 20px; padding: 15px 10px; margin-bottom: 25px;
-        }
-        .header-title {
-            color: #ffffff; font-size: 24px; font-weight: 700;
-            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3); line-height: 1.4;
-        }
-        .sub-heading {
-            color: #ffff00; font-size: 14px; font-weight: 600; margin-bottom: 30px;
-            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
-        }
-        .form-group { text-align: left; margin-bottom: 22px; }
-        .form-label { display: block; color: #ffff00; font-size: 15px; font-weight: 600; margin-bottom: 8px; }
-        .form-input, .form-textarea {
-            width: 100%; background: rgba(255, 255, 255, 0.2); border: 1px solid rgba(255, 255, 255, 0.4);
-            border-radius: 15px; padding: 12px 15px; color: #ffffff; font-size: 14px; outline: none;
-        }
-        .form-textarea { resize: none; height: 120px; }
-        .form-input::placeholder, .form-textarea::placeholder { color: rgba(255, 255, 255, 0.7); }
-        
-        .start-btn {
-            background: linear-gradient(135deg, #ff007f, #ff00ff);
-            border: 2px solid rgba(255, 255, 255, 0.4); border-radius: 30px;
-            color: #ffffff; font-size: 18px; font-weight: 600; padding: 12px 40px;
-            cursor: pointer; box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2); margin-top: 10px;
-        }
-        .start-btn:hover { background: linear-gradient(135deg, #ff1a8c, #ff33ff); }
-        
-        /* स्टेटस रिस्पॉन्स मैसेज एरिया */
-        #statusMessage {
-            margin-top: 15px; font-size: 14px; font-weight: 600; color: #ffffff;
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FB Bot Panel</title>
+<style>
+  body { font-family: Arial; background: #ffe6f0; margin: 0; padding: 20px; }
+  .card { background: #fff; border-radius: 15px; padding: 20px; margin-bottom: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+  h2 { color: #e91e63; }
+  label { display: block; margin-top: 10px; font-weight: bold; color: #555; }
+  input, textarea { width: 100%; padding: 10px; margin-top: 5px; border: 1px solid #ffb6c1; border-radius: 8px; box-sizing: border-box; font-family: monospace; }
+  textarea { height: 150px; resize: vertical; }
+  button { width: 100%; padding: 12px; margin-top: 15px; border: none; border-radius: 8px; font-size: 16px; cursor: pointer; }
+  .start { background: #e91e63; color: #fff; }
+  .stop { background: #888; color: #fff; }
+  .clear { background: #ffc107; color: #000; width: auto; padding: 8px 20px; }
+  #logs { background: #111; color: #0f0; font-family: monospace; padding: 15px; border-radius: 10px; height: 300px; overflow-y: auto; font-size: 13px; }
+  .log-header { display: flex; justify-content: space-between; align-items: center; }
+</style>
 </head>
 <body>
 
-    <div class="panel-container">
-        <div class="header-box">
-            <h1 class="header-title">✨ 🌹❤️ARJUN THAKUR BOT PENAL ❤️🌹 ✨</h1>
-        </div>
+<div class="card">
+  <h2>⚙️ Step 3: Bot Configuration</h2>
 
-        <div class="sub-heading">🌸 Your Ultimate Facebook Bot Control Center 🌸</div>
+  <label>Group ID</label>
+  <input type="text" id="groupId" value="1578315594071492">
 
-        <form id="botForm">
-            <div class="form-group">
-                <label class="form-label">Facebook AppState (JSON):</label>
-                <textarea class="form-textarea" id="appState" placeholder="Paste your Facebook appState JSON here" required></textarea>
-            </div>
+  <label>Interval (Seconds) — Default 3600</label>
+  <input type="number" id="interval" value="3600">
 
-            <div class="form-group">
-                <label class="form-label">Bot Prefix (Default "/"):</label>
-                <input class="form-input" type="text" id="botPrefix" value="/">
-            </div>
+  <label>🍪 Cookies (appstate.json ka content paste karein)</label>
+  <textarea id="cookies" placeholder='[
+  {"key": "c_user", "value": "...", "domain": ".facebook.com", "path": "/"},
+  {"key": "xs", "value": "...", "domain": ".facebook.com", "path": "/"},
+  {"key": "datr", "value": "...", "domain": ".facebook.com", "path": "/"}
+]'></textarea>
 
-            <div class="form-group">
-                <label class="form-label">Admin Facebook ID:</label>
-                <input class="form-input" type="text" id="adminId" placeholder="Your Facebook user ID" required>
-            </div>
+  <button class="start" onclick="startBot()">🚀 Start Bot</button>
+  <button class="stop" onclick="stopBot()">🛑 Stop Bot</button>
+</div>
 
-            <button type="submit" class="start-btn">Start Bot 👑</button>
-        </form>
+<div class="card">
+  <div class="log-header">
+    <h2>📜 Bot Logs</h2>
+    <button class="clear" onclick="clearLogs()">Clear Logs</button>
+  </div>
+  <div id="logs"></div>
+</div>
 
-        <div id="statusMessage"></div>
-    </div>
+<script src="/socket.io/socket.io.js"></script>
+<script>
+  const socket = io();
+  const logs = document.getElementById('logs');
 
-    <script>
-        document.getElementById('botForm').addEventListener('submit', async function(e) {
-            e.preventDefault();
-            const statusDiv = document.getElementById('statusMessage');
-            statusDiv.innerText = "बोट स्टार्ट हो रहा है, कृपया प्रतीक्षा करें...";
-            statusDiv.style.color = "#ffff00";
+  socket.on('log', (msg) => {
+    const p = document.createElement('div');
+    p.textContent = msg;
+    logs.appendChild(p);
+    logs.scrollTop = logs.scrollHeight;
+  });
 
-            const payload = {
-                appState: document.getElementById('appState').value,
-                prefix: document.getElementById('botPrefix').value,
-                adminId: document.getElementById('adminId').value
-            };
+  async function startBot() {
+    const groupId = document.getElementById('groupId').value;
+    const interval = document.getElementById('interval').value;
+    const cookies = document.getElementById('cookies').value;
 
-            try {
-                const response = await fetch('/api/start-bot', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
-                });
-                const result = await response.json();
+    if (!cookies.trim()) {
+      alert('Pehle cookies paste karein!');
+      return;
+    }
 
-                if (result.success) {
-                    statusDiv.innerText = "🟢 " + result.message;
-                    statusDiv.style.color = "#00ff00";
-                } else {
-                    statusDiv.innerText = "🔴 " + result.message;
-                    statusDiv.style.color = "#ff3333";
-                }
-            } catch (err) {
-                statusDiv.innerText = "🔴 सर्वर से कनेक्ट करने में खराबी आई!";
-                statusDiv.style.color = "#ff3333";
-            }
-        });
-    </script>
+    const res = await fetch('/start', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ groupId, interval, cookies })
+    });
+    const data = await res.json();
+    console.log(data);
+  }
+
+  async function stopBot() {
+    await fetch('/stop', { method: 'POST' });
+  }
+
+  function clearLogs() {
+    logs.innerHTML = '';
+  }
+</script>
+
 </body>
 </html>
