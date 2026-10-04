@@ -10,10 +10,11 @@
   h2 { color: #e91e63; }
   label { display: block; margin-top: 10px; font-weight: bold; color: #555; }
   input, textarea { width: 100%; padding: 10px; margin-top: 5px; border: 1px solid #ffb6c1; border-radius: 8px; box-sizing: border-box; font-family: monospace; }
-  textarea { height: 150px; resize: vertical; }
+  textarea { height: 120px; resize: vertical; }
   button { width: 100%; padding: 12px; margin-top: 15px; border: none; border-radius: 8px; font-size: 16px; cursor: pointer; }
   .start { background: #e91e63; color: #fff; }
   .stop { background: #888; color: #fff; }
+  .save { background: #4caf50; color: #fff; }
   .clear { background: #ffc107; color: #000; width: auto; padding: 8px 20px; }
   #logs { background: #111; color: #0f0; font-family: monospace; padding: 15px; border-radius: 10px; height: 300px; overflow-y: auto; font-size: 13px; }
   .log-header { display: flex; justify-content: space-between; align-items: center; }
@@ -24,10 +25,10 @@
 <div class="card">
   <h2>⚙️ Step 3: Bot Configuration</h2>
 
-  <label>Group ID</label>
+  <label>Group ID (Jis group mein bhejna hai)</label>
   <input type="text" id="groupId" value="1578315594071492">
 
-  <label>Interval (Seconds) — Default 3600</label>
+  <label>Interval (Seconds) — Default 3600 (1 hour)</label>
   <input type="number" id="interval" value="3600">
 
   <label>🍪 Cookies (appstate.json ka content paste karein)</label>
@@ -36,6 +37,10 @@
   {"key": "xs", "value": "...", "domain": ".facebook.com", "path": "/"},
   {"key": "datr", "value": "...", "domain": ".facebook.com", "path": "/"}
 ]'></textarea>
+
+  <label>💬 Message (Jo group mein bhejna hai)</label>
+  <textarea id="messageBox" placeholder="Yahan message likhein..."></textarea>
+  <button class="save" onclick="saveMessage()">💾 Save Message</button>
 
   <button class="start" onclick="startBot()">🚀 Start Bot</button>
   <button class="stop" onclick="stopBot()">🛑 Stop Bot</button>
@@ -60,6 +65,23 @@
     logs.appendChild(p);
     logs.scrollTop = logs.scrollHeight;
   });
+
+  // Page load hone par message.txt padho
+  window.onload = async () => {
+    const res = await fetch('/get-message');
+    const data = await res.json();
+    document.getElementById('messageBox').value = data.message;
+  };
+
+  async function saveMessage() {
+    const message = document.getElementById('messageBox').value;
+    await fetch('/save-message', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message })
+    });
+    alert('✅ Message save ho gaya!');
+  }
 
   async function startBot() {
     const groupId = document.getElementById('groupId').value;
