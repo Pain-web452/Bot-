@@ -2,8 +2,7 @@ const express = require('express');
 const http = require('http');
 const { Server } = require('socket.io');
 const path = require('path');
-const fs = require('fs');
-const login = require('nexus-fca');
+const login = require('@dongdev/fca-unofficial');
 
 const app = express();
 const server = http.createServer(app);
@@ -23,18 +22,15 @@ function sendLog(msg) {
     io.emit('log', msg);
 }
 
-// Cookies string ko appState array mein convert karein
-// Support: "c_user=123; xs=abc; datr=xyz" ya JSON array dono
+// Cookies parse - "c_user=...; xs=..." ya JSON array dono support
 function parseCookies(cookieInput) {
     if (!cookieInput || cookieInput.trim() === '') return null;
 
-    // Try JSON first
     try {
         const parsed = JSON.parse(cookieInput);
         if (Array.isArray(parsed)) return parsed;
-    } catch (e) { /* not JSON, continue */ }
+    } catch (e) { /* not JSON */ }
 
-    // Parse as "key=value; key2=value2" format
     const cookies = [];
     const pairs = cookieInput.split(';');
     for (let pair of pairs) {
@@ -56,7 +52,7 @@ function parseCookies(cookieInput) {
     return cookies.length > 0 ? cookies : null;
 }
 
-// Messages file save
+// Save messages
 app.post('/save-messages', (req, res) => {
     const { messages } = req.body;
     currentMessages = messages.filter(m => m.trim() !== '');
@@ -64,7 +60,6 @@ app.post('/save-messages', (req, res) => {
     res.json({ status: 'saved', count: currentMessages.length });
 });
 
-// Messages read
 app.get('/get-messages', (req, res) => {
     res.json({ messages: currentMessages });
 });
@@ -121,7 +116,7 @@ app.post('/start', async (req, res) => {
         botRunning = true;
         messageIndex = 0;
 
-        // Har 5 second mein next message bhejega (spam se bachne ke liye 5s minimum)
+        // Har 5 second message bhejega
         const INTERVAL_MS = 5000;
 
         botInterval = setInterval(() => {
@@ -139,7 +134,7 @@ app.post('/start', async (req, res) => {
             });
         }, INTERVAL_MS);
 
-        sendLog(`⏳ Bot started! Har 5 second mein message bhejega (${currentMessages.length} messages loop honge)`);
+        sendLog(`⏳ Bot started! Har 5 second message jayega (${currentMessages.length} messages loop honge)`);
         res.json({ status: 'started' });
     } catch (err) {
         sendLog('❌ Login fail: ' + err.message);
