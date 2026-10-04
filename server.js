@@ -1,72 +1,97 @@
 const express = require('express');
+const http = require('http');
+const { Server } = require('socket.io');
 const path = require('path');
-// नोट: आप अपनी सुविधा के अनुसार fca-project या कोई भी वर्किंग fca लाइब्रेरी इस्तेमाल कर सकते हैं
-const login = require('fca-project-or-any-active-fca'); 
+const login = require('nexus-fca');
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const server = http.createServer(app);
+const io = new Server(server);
 
-app.use(express.json());
+app.use(express.json({ limit: '5mb' }));
 app.use(express.static(path.join(__dirname, 'public')));
 
-// फ्रंटएंड से डेटा प्राप्त करने का रूट
-app.post('/api/start-bot', (req, res) => {
-    const { appState, prefix, adminId } = req.body;
+let botApi = null;
+let botInterval = null;
+let botRunning = false;
 
-    if (!appState || !adminId) {
-        return res.status(400).json({ success: false, message: "AppState और Admin ID डालना जरूरी है!" });
+function sendLog(msg) {
+    console.log(msg);
+    io.emit('log', msg);
+}
+
+// Bot start karne ka route — ab cookies body se aayengi
+app.post('/start', async (req, res) => {
+    if (botRunning) return res.json({ status: 'already_running' });
+
+    const { groupId, interval, cookies } = req.body;
+
+    if (!cookies || cookies.trim() === '') {
+        return res.json({ status: 'error', message: 'Cookies paste karein' });
+    }
+
+    let appState;
+    try {
+        appState = JSON.parse(cookies);
+        if (!Array.isArray(appState)) throw new Error('Cookies array format mein honi chahiye');
+    } catch (e) {
+        sendLog('❌ Cookies JSON format galat hai: ' + e.message);
+        return res.json({ status: 'error', message: 'Cookies ka format galat hai' });
     }
 
     try {
-        // AppState को ऑब्जेक्ट में बदलना
-        const parsedAppState = JSON.parse(appState);
+        sendLog('⏳ Login try kar raha hoon...');
 
-        // फेसबुक लॉगिन प्रोसेस शुरू
-        login({ appState: parsedAppState }, (err, api) => {
-            if (err) {
-                console.error("लॉगिन फेल हो गया:", err);
-                return res.status(500).json({ success: false, message: "फेसबुक लॉगिन फेल: " + err.message });
-            }
-
-            // बोट कॉन्फ़िगरेशन सेटिंग्स
-            const botPrefix = prefix || "/";
-            api.setOptions({ listenEvents: true, selfListen: false });
-
-            console.log(`बोट सफलतापूर्वक चालू हो गया! प्रिफिक्स: ${botPrefix}, एडमिन ID: ${adminId}`);
-
-            // एडमिन को एक नोटिफिकेशन मैसेज भेजना
-            api.sendMessage(`Hello Boss! Your bot has been successfully activated via Arjun Thakur Bot Penal. ✨`, adminId);
-
-            // मैसेज सुनने और रिप्लाई देने का लॉजिक (Listen Loop)
-            api.listenMqtt((listenErr, event) => {
-                if (listenErr) return console.error(listenErr);
-
-                if (event.type === "message" && event.body) {
-                    const messageBody = event.body.trim();
-
-                    // बेसिक कमांड चेक (जैसे: /ping या /help)
-                    if (messageBody.startsWith(botPrefix)) {
-                        const command = messageBody.slice(botPrefix.length).toLowerCase();
-
-                        if (command === "ping") {
-                            api.sendMessage("Pong! बोट एकदम सही काम कर रहा है। 🚀", event.threadID, event.messageID);
-                        } else if (command === "help") {
-                            api.sendMessage("उपलब्ध कमांड्स: \n1. /ping - बोट स्टेटस चेक करने के लिए।\n2. /help - मदद के लिए।", event.threadID, event.messageID);
-                        }
-                        // आप यहाँ अपनी पसंद के और कमांड्स भी जोड़ सकते हैं
-                    }
-                }
-            });
+        botApi = await login({ appState }, {
+            appState,
+            listenEvents: true,
+            emitReady: true,
+            autoReconnect: true,
+            randomUserAgent: true
         });
 
-        // फ्रंटएंड को तुरंत रिस्पॉन्स देना
-        res.json({ success: true, message: "बोट बैकएंड में सफलतापूर्वक शुरू कर दिया गया है!" });
+        sendLog(`✅ Login successful! ID: ${botApi.getCurrentUserID()}`);
 
-    } catch (error) {
-        res.status(400).json({ success: false, message: "अमान्य JSON (Invalid AppState Format)" });
+        botApi.on('ready', () => sendLog('🚀 Bot ready!'));
+
+        botApi.listenMqtt((err, event) => {
+            if (err) return sendLog('❌ Listen error: ' + err);
+            if (event.type === 'message' && event.body) {
+                sendLog(`📩 Message: ${event.body}`);
+                if (event.body === '/ping') botApi.sendMessage('pong', event.threadID);
+            }
+        });
+
+        botRunning = true;
+        const ms = interval * 1000;
+        sendLog(`⏳ Har ${interval} second mein message bhejega...`);
+
+        botInterval = setInterval(() => {
+            botApi.sendMessage('Hello from bot!', groupId, (err) => {
+                if (err) return sendLog('❌ Send fail: ' + err);
+                sendLog(`[${new Date().toLocaleTimeString()}] ✅ Message bhej diya`);
+            });
+        }, ms);
+
+        res.json({ status: 'started' });
+    } catch (err) {
+        sendLog('❌ Login fail: ' + err.message);
+        res.json({ status: 'error', message: err.message });
     }
 });
 
-app.listen(PORT, () => {
-    console.log(`सर्वर http://localhost:${PORT} पर चल रहा है`);
+app.post('/stop', (req, res) => {
+    if (botInterval) clearInterval(botInterval);
+    botRunning = false;
+    botApi = null;
+    sendLog('🛑 Bot stopped');
+    res.json({ status: 'stopped' });
+});
+
+io.on('connection', (socket) => {
+    sendLog('✅ Dashboard client connected');
+});
+
+server.listen(3000, () => {
+    console.log('🌐 Panel chalu: http://localhost:3000');
 });
