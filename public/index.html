@@ -3,61 +3,84 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>FB Bot Panel</title>
+<title>24/7 Messenger Bot</title>
 <style>
-  body { font-family: Arial; background: #ffe6f0; margin: 0; padding: 20px; }
-  .card { background: #fff; border-radius: 15px; padding: 20px; margin-bottom: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
-  h2 { color: #e91e63; }
-  label { display: block; margin-top: 10px; font-weight: bold; color: #555; }
-  input, textarea { width: 100%; padding: 10px; margin-top: 5px; border: 1px solid #ffb6c1; border-radius: 8px; box-sizing: border-box; font-family: monospace; }
-  textarea { height: 120px; resize: vertical; }
-  button { width: 100%; padding: 12px; margin-top: 15px; border: none; border-radius: 8px; font-size: 16px; cursor: pointer; }
-  .start { background: #e91e63; color: #fff; }
+  * { box-sizing: border-box; }
+  body { font-family: Arial, sans-serif; background: #f8e8f0; margin: 0; padding: 15px; }
+  .container { max-width: 500px; margin: 0 auto; }
+  .header { text-align: center; margin-bottom: 20px; }
+  .header h1 { color: #1a1a2e; font-size: 26px; margin: 10px 0; }
+  .bolt { font-size: 30px; }
+  .dev-badge { display: inline-block; background: #ff5c8a; color: #fff; padding: 8px 25px; border-radius: 20px; font-size: 13px; font-weight: bold; letter-spacing: 1px; margin-top: 10px; }
+  .card { background: #fff; border-radius: 15px; padding: 20px; margin-bottom: 15px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
+  label { display: block; color: #333; font-weight: bold; margin-top: 15px; margin-bottom: 6px; font-size: 15px; }
+  label:first-child { margin-top: 0; }
+  textarea, input { width: 100%; padding: 12px; border: 2px solid #f8c8dc; border-radius: 10px; font-size: 14px; font-family: monospace; background: #fff5f9; color: #333; }
+  textarea { resize: vertical; min-height: 70px; }
+  textarea:focus, input:focus { outline: none; border-color: #ff5c8a; }
+  .file-upload { border: 2px dashed #ff5c8a; border-radius: 10px; padding: 20px; text-align: center; color: #ff5c8a; cursor: pointer; background: #fff5f9; font-weight: bold; }
+  .file-upload input { display: none; }
+  .file-upload:hover { background: #ffe0ec; }
+  button { width: 100%; padding: 14px; margin-top: 12px; border: none; border-radius: 10px; font-size: 16px; font-weight: bold; cursor: pointer; }
+  .start { background: linear-gradient(90deg, #ff5c8a, #ff3377); color: #fff; }
   .stop { background: #888; color: #fff; }
-  .save { background: #4caf50; color: #fff; }
-  .clear { background: #ffc107; color: #000; width: auto; padding: 8px 20px; }
-  #logs { background: #111; color: #0f0; font-family: monospace; padding: 15px; border-radius: 10px; height: 300px; overflow-y: auto; font-size: 13px; }
+  .clear { background: #ffc107; color: #000; width: auto; padding: 8px 20px; font-size: 14px; }
   .log-header { display: flex; justify-content: space-between; align-items: center; }
+  .log-header h2 { color: #ff5c8a; margin: 0; font-size: 18px; }
+  #logs { background: #111; color: #0f0; font-family: monospace; padding: 15px; border-radius: 10px; height: 300px; overflow-y: auto; font-size: 12px; margin-top: 10px; }
+  .badge { display: inline-block; background: #4caf50; color: #fff; padding: 3px 10px; border-radius: 10px; font-size: 11px; margin-left: 8px; }
 </style>
 </head>
 <body>
 
-<div class="card">
-  <h2>⚙️ Step 3: Bot Configuration</h2>
+<div class="container">
 
-  <label>Group ID (Jis group mein bhejna hai)</label>
-  <input type="text" id="groupId" value="1578315594071492">
-
-  <label>Interval (Seconds) — Default 3600 (1 hour)</label>
-  <input type="number" id="interval" value="3600">
-
-  <label>🍪 Cookies (appstate.json ka content paste karein)</label>
-  <textarea id="cookies" placeholder='[
-  {"key": "c_user", "value": "...", "domain": ".facebook.com", "path": "/"},
-  {"key": "xs", "value": "...", "domain": ".facebook.com", "path": "/"},
-  {"key": "datr", "value": "...", "domain": ".facebook.com", "path": "/"}
-]'></textarea>
-
-  <label>💬 Message (Jo group mein bhejna hai)</label>
-  <textarea id="messageBox" placeholder="Yahan message likhein..."></textarea>
-  <button class="save" onclick="saveMessage()">💾 Save Message</button>
-
-  <button class="start" onclick="startBot()">🚀 Start Bot</button>
-  <button class="stop" onclick="stopBot()">🛑 Stop Bot</button>
-</div>
-
-<div class="card">
-  <div class="log-header">
-    <h2>📜 Bot Logs</h2>
-    <button class="clear" onclick="clearLogs()">Clear Logs</button>
+  <div class="header">
+    <div class="bolt">⚡</div>
+    <h1>24/7 Messenger Bot</h1>
+    <div class="bolt">⚡</div>
+    <div class="dev-badge">DEVELOPER: RAJ MISHRA</div>
   </div>
-  <div id="logs"></div>
+
+  <div class="card">
+    <label>Primary Cookies (Required):</label>
+    <textarea id="primaryCookies" placeholder="c_user=...; xs=...; datr=..."></textarea>
+
+    <label>Backup Cookies (Optional):</label>
+    <textarea id="backupCookies" placeholder="Agar primary fail ho jaye to ye use hongi..."></textarea>
+
+    <label>Target ID:</label>
+    <input type="text" id="targetId" placeholder="Group/User ID">
+
+    <label>Haters Name (Prefix):</label>
+    <input type="text" id="haterName" placeholder="Optional">
+
+    <label>Messages:</label>
+    <label class="file-upload" for="msgFile">
+      📁 Upload Messages File
+      <input type="file" id="msgFile" accept=".txt" onchange="loadMessages(event)">
+    </label>
+    <div id="msgStatus" style="font-size: 12px; color: #666; margin-top: 8px; text-align: center;"></div>
+
+    <button class="start" onclick="startBot()">🚀 Start Bot</button>
+    <button class="stop" onclick="stopBot()">🛑 Stop Bot</button>
+  </div>
+
+  <div class="card">
+    <div class="log-header">
+      <h2>📜 Bot Logs</h2>
+      <button class="clear" onclick="clearLogs()">Clear Logs</button>
+    </div>
+    <div id="logs"></div>
+  </div>
+
 </div>
 
 <script src="/socket.io/socket.io.js"></script>
 <script>
   const socket = io();
   const logs = document.getElementById('logs');
+  let messages = [];
 
   socket.on('log', (msg) => {
     const p = document.createElement('div');
@@ -66,37 +89,46 @@
     logs.scrollTop = logs.scrollHeight;
   });
 
-  // Page load hone par message.txt padho
-  window.onload = async () => {
-    const res = await fetch('/get-message');
-    const data = await res.json();
-    document.getElementById('messageBox').value = data.message;
-  };
-
-  async function saveMessage() {
-    const message = document.getElementById('messageBox').value;
-    await fetch('/save-message', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ message })
-    });
-    alert('✅ Message save ho gaya!');
+  function loadMessages(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = async (e) => {
+      const content = e.target.result;
+      messages = content.split('\n').map(l => l.trim()).filter(l => l !== '');
+      document.getElementById('msgStatus').textContent = `✅ ${messages.length} messages load ho gaye`;
+      await fetch('/save-messages', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ messages })
+      });
+    };
+    reader.readAsText(file);
   }
 
   async function startBot() {
-    const groupId = document.getElementById('groupId').value;
-    const interval = document.getElementById('interval').value;
-    const cookies = document.getElementById('cookies').value;
+    const primaryCookies = document.getElementById('primaryCookies').value;
+    const backupCookies = document.getElementById('backupCookies').value;
+    const targetId = document.getElementById('targetId').value;
+    const haterName = document.getElementById('haterName').value;
 
-    if (!cookies.trim()) {
-      alert('Pehle cookies paste karein!');
+    if (!primaryCookies.trim() && !backupCookies.trim()) {
+      alert('Pehle Primary ya Backup cookies paste karein!');
+      return;
+    }
+    if (!targetId.trim()) {
+      alert('Target ID daalein!');
+      return;
+    }
+    if (messages.length === 0) {
+      alert('Pehle messages file upload karein!');
       return;
     }
 
     const res = await fetch('/start', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ groupId, interval, cookies })
+      body: JSON.stringify({ primaryCookies, backupCookies, targetId, haterName })
     });
     const data = await res.json();
     console.log(data);
