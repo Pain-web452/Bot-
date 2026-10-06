@@ -26,7 +26,9 @@
 
     <div class="box">
         <h3>🔑 Pairing Code</h3>
-        <div id="pairingCode">Waiting...</div>
+        <input id="phoneNumber" placeholder="Number with country code (e.g., 919876543210)" />
+        <button onclick="getPairingCode()">Get Pairing Code</button>
+        <div id="pairingCode" style="margin-top: 10px;">Waiting...</div>
         <small>WhatsApp → Linked Devices → Link with phone number → यह कोड डालें</small>
     </div>
 
@@ -54,16 +56,34 @@
         let selectedGroups = new Set();
 
         socket.on('status', (s) => document.getElementById('status').innerText = s);
-        socket.on('pairing_code', (code) => document.getElementById('pairingCode').innerText = code);
         socket.on('log', (msg) => {
             const logDiv = document.getElementById('log');
             logDiv.innerHTML += `<div>[${new Date().toLocaleTimeString()}] ${msg}</div>`;
             logDiv.scrollTop = logDiv.scrollHeight;
         });
 
+        async function getPairingCode() {
+            const phoneNumber = document.getElementById('phoneNumber').value.trim();
+            if (!phoneNumber) return alert('Number daalo');
+
+            document.getElementById('pairingCode').innerText = 'Loading...';
+
+            const res = await fetch('/api/pairing-code', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ phoneNumber })
+            });
+            const data = await res.json();
+            if (data.code) {
+                document.getElementById('pairingCode').innerText = data.code;
+            } else {
+                document.getElementById('pairingCode').innerText = 'Error: ' + (data.error || 'unknown');
+            }
+        }
+
         async function loadGroups() {
             const res = await fetch('/api/groups');
-            if (!res.ok) return alert('Groups load failed. Connected ho?');
+            if (!res.ok) return alert('Groups load failed. Pehle connect karo?');
             const groups = await res.json();
             const list = document.getElementById('groupList');
             list.innerHTML = '';
