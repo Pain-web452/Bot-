@@ -17,15 +17,8 @@ if (!fs.existsSync(UPLOADS_DIR)) {
 const upload = multer({ dest: 'uploads/' });
 app.use(express.static('public'));
 
-let globalReplyMessage = "Automated reply mode active.";
+let globalReplyMessage = "Hello! Yeh ek automated broadcast message hai.";
 let sock = null;
-
-// HARDCODED HATER LIST (Yahan aap unke numbers country code ke sath daal sakte hain)
-// Note: Sirf numbers dalein, jaise "919876543210". Inhi logo ko group ya inbox me automatic target kiya jayega.
-const HATER_LIST = [
-    "91XXXXXXXXXX", 
-    "91YYYYYYYYYY"
-];
 
 function loadMessagesFromTxtFile() {
     const filePath = path.join(UPLOADS_DIR, 'messages.txt');
@@ -34,7 +27,7 @@ function loadMessagesFromTxtFile() {
             const fileContent = fs.readFileSync(filePath, 'utf-8').trim();
             if (fileContent) {
                 globalReplyMessage = fileContent;
-                console.log('📚 TXT file text successfully loaded into memory.');
+                console.log('📚 TXT file text loaded successfully.');
             }
         } catch (error) {
             console.error('File reading issue:', error.message);
@@ -49,10 +42,10 @@ app.post('/upload-messages', upload.single('messages'), (req, res) => {
         if (fs.existsSync(targetPath)) fs.unlinkSync(targetPath);
         fs.renameSync(req.file.path, targetPath);
         loadMessagesFromTxtFile();
-        res.send('Done');
+        res.send('Processed.');
     } catch (e) {
         if (req.file && fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path);
-        res.status(500).send('Error');
+        res.status(500).send('Error.');
     }
 });
 
@@ -69,7 +62,42 @@ app.get('/get-code', async (req, res) => {
             return res.json({ success: false, message: err.message });
         }
     } else {
-        return res.json({ success: false, message: 'Bot status not ready' });
+        return res.json({ success: false, message: 'Bot not ready.' });
+    }
+});
+
+// NAYA ROUTE: SAARE GROUPS ME MESSAGE BROADCAST KARNE KE LIYE
+app.get('/broadcast-groups', async (req, res) => {
+    if (!sock) return res.status(500).send('WhatsApp connected nahi hai.');
+
+    try {
+        // WhatsApp se saare chats/groups fetch karna
+        const chats = await sock.groupFetchAllParticipating();
+        const groupIds = Object.keys(chats);
+
+        if (groupIds.length === 0) {
+            return res.send('Aapka account kisi bhi group (GC) me added nahi hai.');
+        }
+
+        console.log(`📢 Total ${groupIds.length} groups mile. Message bhejra hu...`);
+
+        // Har group me baari-baari message bhejna loop chalakar
+        for (const groupId of groupIds) {
+            try {
+                await sock.sendMessage(groupId, { text: globalReplyMessage });
+                console.log(`✅ Message sent to group: ${chats[groupId].subject}`);
+                
+                // Safe delay timer (3 seconds) taki antispam system trigger na ho
+                await new Promise(resolve => setTimeout(resolve, 3000));
+            } catch (err) {
+                console.error(`❌ Group ${groupId} me message nahi gaya:`, err.message);
+            }
+        }
+
+        res.send(`Broadcast complete! Total ${groupIds.length} groups me message bhej diya gaya.`);
+    } catch (error) {
+        console.error('Group fetch error:', error);
+        res.status(500).send('Groups fetch karne me dikkat aayi.');
     }
 });
 
@@ -90,49 +118,12 @@ async function startWhatsAppServer() {
             const shouldReconnect = lastDisconnect?.error?.output?.statusCode !== DisconnectReason.loggedOut;
             if (shouldReconnect) startWhatsAppServer();
         } else if (connection === 'open') {
-            console.log('🚀 WhatsApp Server Connected (Group + Hater Mode Online)!');
-        }
-    });
-
-    // INCOMING MESSAGES LOGIC
-    sock.ev.on('messages.upsert', async (m) => {
-        const msgList = m.messages;
-        if (msgList && msgList.length > 0) {
-            const msg = msgList[0];
-            
-            // Apne khud ke bheje messages ko ignore karein
-            if (msg && !msg.key.fromMe && m.type === 'notify') {
-                
-                const remoteJid = msg.key.remoteJid; // Yeh batata hai message kahan aaya (Inbox ya Group)
-                let senderNumber = "";
-
-                if (remoteJid.endsWith('@g.us')) {
-                    // Agar message GROUP me aaya hai, to asli sender ka number nikalna
-                    senderNumber = msg.key.participant ? msg.key.participant.split('@')[0] : "";
-                } else if (remoteJid.endsWith('@s.whatsapp.net')) {
-                    // Agar message DIRECT INBOX me aaya hai
-                    senderNumber = remoteJid.split('@')[0];
-                }
-
-                // Check karein ki kya sender ka number hamari HATER_LIST me shamil hai?
-                const isHater = HATER_LIST.includes(senderNumber);
-
-                if (isHater && remoteJid) {
-                    try {
-                        // Agar hater ne group me message kiya, to reply usi group me jayega.
-                        // Agar inbox me kiya, to reply inbox me jayega.
-                        await sock.sendMessage(remoteJid, { text: globalReplyMessage });
-                        console.log(`🎯 Target matched (${senderNumber}). Message sent to chat: ${remoteJid}`);
-                    } catch (sendErr) {
-                        console.error('Message delivery error:', sendErr.message);
-                    }
-                }
-            }
+            console.log('🚀 WhatsApp Server Connected and Group Broadcast Ready!');
         }
     });
 }
 
 app.listen(PORT, () => {
     console.log(`Web portal active on port ${PORT}`);
-    startWhatsAppServer().catch(err => console.error("Fatal startup error:", err));
+    startWhatsAppServer().catch(err => console.error("Startup error:", err));
 });
