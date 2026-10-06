@@ -13,7 +13,7 @@ const PORT = process.env.PORT || 3000;
 
 let sock;
 let isConnected = false;
-let pairingCodeRequested = false;
+let latestQR = null;
 
 const SESSION_DIR = path.join(process.env.DATA_DIR || __dirname, 'auth_info');
 console.log('Session directory:', SESSION_DIR);
@@ -25,7 +25,7 @@ async function connectToWhatsApp() {
     sock = makeWASocket({
         version,
         auth: state,
-        printQRInTerminal: false,   // QR बंद
+        printQRInTerminal: false,
         logger: P({ level: 'silent' }),
         browser: ["RK RAJA XWD", "Chrome", "1.0.0"]
     });
@@ -33,7 +33,12 @@ async function connectToWhatsApp() {
     sock.ev.on('creds.update', saveCreds);
 
     sock.ev.on('connection.update', (update) => {
-        const { connection, lastDisconnect } = update;
+        const { connection, lastDisconnect, qr } = update;
+
+        if (qr) {
+            latestQR = qr;
+            console.log('QR generated (waiting for pairing code request)');
+        }
 
         if (connection === 'open') {
             isConnected = true;
@@ -43,7 +48,6 @@ async function connectToWhatsApp() {
 
         if (connection === 'close') {
             isConnected = false;
-            pairingCodeRequested = false;
             const statusCode = lastDisconnect?.error?.output?.statusCode;
             if (statusCode !== DisconnectReason.loggedOut) {
                 console.log('Reconnecting...');
@@ -55,22 +59,6 @@ async function connectToWhatsApp() {
 
 connectToWhatsApp();
 
-// --- Group Fetch ---
-async function fetchGroups() {
-    if (!sock || !isConnected) return [];
-    try {
-        const groups = await sock.groupFetchAllParticipating();
-        return Object.values(groups).map(g => ({
-            id: g.id,
-            name: g.subject,
-            size: g.participants?.length || 0
-        }));
-    } catch (err) {
-        console.log('Group fetch error:', err.message);
-        return [];
-    }
-}
-
 // --- API Routes ---
 app.use(express.json());
 app.use(express.static('public'));
@@ -79,26 +67,20 @@ app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
-// 🔑 Pairing Code API (UI से नंबर लेगा)
+// 🔑 Pairing Code API
 app.post('/api/pairing-code', async (req, res) => {
     const { phoneNumber } = req.body;
     if (!phoneNumber) return res.status(400).json({ error: 'Number required' });
 
-    // साफ़ करो: सिर्फ digits
     const cleanNumber = phoneNumber.replace(/\D/g, '');
     if (cleanNumber.length < 10) return res.status(400).json({ error: 'Invalid number' });
 
     try {
-        // अगर पहले से registered है तो कोड नहीं मिलेगा
         if (sock.authState.creds.registered) {
-            return res.status(400).json({ error: 'Already connected' });
+            return res.status(400).json({ error: 'Already connected. Logout from WhatsApp first.' });
         }
 
-        // socket तैयार होने का इंतज़ार करो
-        if (!sock?.ws?.isOpen) {
-            await new Promise(r => setTimeout(r, 2000));
-        }
-
+        console.log('Requesting pairing code for:', cleanNumber);
         const code = await sock.requestPairingCode(cleanNumber);
         console.log('🔑 Pairing Code:', code);
         res.json({ code });
@@ -108,12 +90,23 @@ app.post('/api/pairing-code', async (req, res) => {
     }
 });
 
+// 📋 Groups Fetch
 app.get('/api/groups', async (req, res) => {
     if (!isConnected) return res.status(503).json({ error: 'Not connected' });
-    const groups = await fetchGroups();
-    res.json(groups);
+    try {
+        const groups = await sock.groupFetchAllParticipating();
+        const list = Object.values(groups).map(g => ({
+            id: g.id,
+            name: g.subject,
+            size: g.participants?.length || 0
+        }));
+        res.json(list);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
 });
 
+// 💬 Send Messages
 app.post('/api/send', async (req, res) => {
     if (!isConnected || !sock) {
         return res.status(503).json({ error: 'WhatsApp not connected' });
