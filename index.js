@@ -1,129 +1,114 @@
-import makeWASocketModule, { useMultiFileAuthState, DisconnectReason } from '@whiskeysockets/baileys';
-const makeWASocket = makeWASocketModule.default || makeWASocketModule;
-
-import express from 'express';
-import multer from 'multer';
-import fs from 'fs';
-import path from 'path';
+const express = require('express');
+const { Client, LocalAuth } = require('whatsapp-web.js');
+const qrcode = require('qrcode-terminal');
+const path = require('path');
+const multer = require('multer'); // फाइल अपलोड करने के लिए
+const fs = require('fs');
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const port = 3000;
 
-const UPLOADS_DIR = path.join(process.cwd(), 'uploads');
-if (!fs.existsSync(UPLOADS_DIR)) {
-    fs.mkdirSync(UPLOADS_DIR, { recursive: true });
-}
-
+// Multer सेटअप (फाइल स्टोर करने के लिए)
 const upload = multer({ dest: 'uploads/' });
-app.use(express.static('public'));
 
-let globalReplyMessage = "Hello! Yeh ek automated broadcast message hai.";
-let sock = null;
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+app.use(express.static(path.join(__dirname)));
 
-function loadMessagesFromTxtFile() {
-    const filePath = path.join(UPLOADS_DIR, 'messages.txt');
-    if (fs.existsSync(filePath)) {
-        try {
-            const fileContent = fs.readFileSync(filePath, 'utf-8').trim();
-            if (fileContent) {
-                globalReplyMessage = fileContent;
-                console.log('📚 TXT file text loaded successfully.');
-            }
-        } catch (error) {
-            console.error('File reading issue:', error.message);
-        }
+// WhatsApp क्लाइंट इनिशियलाइज
+const client = new Client({ authStrategy: new LocalAuth() });
+client.on('qr', (qr) => qrcode.generate(qr, { small: true }));
+client.on('ready', () => console.log('WhatsApp Client READY!'));
+client.initialize();
+
+// ग्लोबल वेरिएबल्स
+let shouldStop = false;
+let loadedMessages = []; // फाइल से लोड की गई लाइन्स
+
+// 1. message.txt फाइल अपलोड और रीड करने का रूट (Step 2)
+app.post('/api/upload-messages', upload.single('messageFile'), (req, res) => {
+    if (!req.file) {
+        return res.status(400).json({ error: "Kripya valid .txt file upload karein." });
     }
-}
 
-app.post('/upload-messages', upload.single('messages'), (req, res) => {
-    if (!req.file) return res.status(400).send('No file uploaded.');
-    const targetPath = path.join(UPLOADS_DIR, 'messages.txt');
     try {
-        if (fs.existsSync(targetPath)) fs.unlinkSync(targetPath);
-        fs.renameSync(req.file.path, targetPath);
-        loadMessagesFromTxtFile();
-        res.send('Processed.');
-    } catch (e) {
-        if (req.file && fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path);
-        res.status(500).send('Error.');
+        const filePath = req.file.path;
+        const fileContent = fs.readFileSync(filePath, 'utf-8');
+        
+        // फाइल को लाइन-बाय-लाइन तोड़कर एरे (Array) में सेव करें और खाली लाइन हटा दें
+        loadedMessages = fileContent.split('\n').map(line => line.trim()).filter(line => line.length > 0);
+        
+        // टेम्परेरी फाइल डिलीट करें
+        fs.unlinkSync(filePath);
+
+        console.log(`Loaded ${loadedMessages.length} messages from file.`);
+        res.json({ status: "Success", total_messages: loadedMessages.length });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: "File read karne me dikkat aayi." });
     }
 });
 
-app.get('/get-code', async (req, res) => {
-    const phone = req.query.phone;
-    if (!phone) return res.json({ success: false, message: 'Phone number missing' });
-    const cleanNumber = phone.replace(/[^0-9]/g, '');
-
-    if (sock && !sock.authState.creds.registered) {
-        try {
-            let code = await sock.requestPairingCode(cleanNumber);
-            return res.json({ success: true, code: code });
-        } catch (err) {
-            return res.json({ success: false, message: err.message });
-        }
-    } else {
-        return res.json({ success: false, message: 'Bot not ready.' });
-    }
-});
-
-// NAYA ROUTE: SAARE GROUPS ME MESSAGE BROADCAST KARNE KE LIYE
-app.get('/broadcast-groups', async (req, res) => {
-    if (!sock) return res.status(500).send('WhatsApp connected nahi hai.');
-
+// 2. ग्रुप्स की लिस्ट फ़ेच करने का रूट
+app.get('/api/fetch-groups', async (req, res) => {
     try {
-        // WhatsApp se saare chats/groups fetch karna
-        const chats = await sock.groupFetchAllParticipating();
-        const groupIds = Object.keys(chats);
-
-        if (groupIds.length === 0) {
-            return res.send('Aapka account kisi bhi group (GC) me added nahi hai.');
-        }
-
-        console.log(`📢 Total ${groupIds.length} groups mile. Message bhejra hu...`);
-
-        // Har group me baari-baari message bhejna loop chalakar
-        for (const groupId of groupIds) {
-            try {
-                await sock.sendMessage(groupId, { text: globalReplyMessage });
-                console.log(`✅ Message sent to group: ${chats[groupId].subject}`);
-                
-                // Safe delay timer (3 seconds) taki antispam system trigger na ho
-                await new Promise(resolve => setTimeout(resolve, 3000));
-            } catch (err) {
-                console.error(`❌ Group ${groupId} me message nahi gaya:`, err.message);
-            }
-        }
-
-        res.send(`Broadcast complete! Total ${groupIds.length} groups me message bhej diya gaya.`);
+        const chats = await client.getChats();
+        const groups = chats.filter(chat => chat.isGroup).map(g => ({
+            id: g.id._serialized,
+            name: g.name
+        }));
+        res.json(groups);
     } catch (error) {
-        console.error('Group fetch error:', error);
-        res.status(500).send('Groups fetch karne me dikkat aayi.');
+        res.status(500).json({ error: "Groups fetch karne me dikkat aayi." });
     }
 });
 
-async function startWhatsAppServer() {
-    const { state, saveCreds } = await useMultiFileAuthState('whatsapp_session');
-    
-    sock = makeWASocket({
-        auth: state,
-        printQRInTerminal: false
-    });
+// 3. सिलेक्टिव ग्रुप्स में लाइन-बाय-लाइन विद प्रिफिक्स मैसेज भेजने का रूट
+app.post('/api/start-broadcast', async (req, res) => {
+    const { groups, haterName, delayTime } = req.body;
+    shouldStop = false;
 
-    sock.ev.on('creds.update', saveCreds);
-    loadMessagesFromTxtFile();
+    if (loadedMessages.length === 0) {
+        return res.status(400).json({ error: "Pehle message.txt file upload karein!" });
+    }
 
-    sock.ev.on('connection.update', (update) => {
-        const { connection, lastDisconnect } = update;
-        if (connection === 'close') {
-            const shouldReconnect = lastDisconnect?.error?.output?.statusCode !== DisconnectReason.loggedOut;
-            if (shouldReconnect) startWhatsAppServer();
-        } else if (connection === 'open') {
-            console.log('🚀 WhatsApp Server Connected and Group Broadcast Ready!');
+    res.json({ status: "Processing started" });
+
+    // हर सिलेक्टेड ग्रुप पर लूप चलाएं
+    for (let g = 0; g < groups.length; g++) {
+        const groupId = groups[g];
+
+        // उस ग्रुप के लिए message.txt की हर लाइन को एक-एक करके भेजें
+        for (let m = 0; m < loadedMessages.length; m++) {
+            if (shouldStop) {
+                console.log("⚠️ User dwara beech me hi rok diya gaya.");
+                break;
+            }
+
+            try {
+                // प्रिफिक्स (Hater Name) के साथ मैसेज तैयार करें
+                const finalMessage = `${haterName} ${loadedMessages[m]}`;
+                
+                await client.sendMessage(groupId, finalMessage);
+                console.log(`🚀 Sent: "${finalMessage}" to group: ${groupId}`);
+
+                // नंबर बैन से बचने के लिए डिले (डिफ़ॉल्ट 2 सेकंड या यूजर इनपुट)
+                const waitTime = (delayTime || 2) * 1000;
+                await new Promise(resolve => setTimeout(resolve, waitTime));
+
+            } catch (err) {
+                console.error(`❌ Failed to send message to ${groupId}:`, err);
+            }
         }
-    });
-}
-
-app.listen(PORT, () => {
-    console.log(`Web portal active on port ${PORT}`);
-    startWhatsAppServer().catch(err => console.error("Startup error:", err));
+        
+        if (shouldStop) break;
+    }
 });
+
+// 4. रोकने का रूट
+app.post('/api/stop-broadcast', (req, res) => {
+    shouldStop = true;
+    res.json({ status: "Stopping signal sent." });
+});
+
+app.listen(port, () => console.log(`Server: http://localhost:${port}`));
