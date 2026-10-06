@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Advanced WhatsApp Multi-Group Sender</title>
+    <title>WhatsApp Multi-Group Sender</title>
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding: 20px; background-color: #f0f2f5; color: #333; }
+        body { font-family: 'Segoe UI', sans-serif; padding: 20px; background-color: #f0f2f5; }
         .card { background: white; padding: 25px; border-radius: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.08); max-width: 550px; margin: 15px auto; }
         h3 { margin-top: 0; color: #075e54; }
         .form-group { margin-bottom: 15px; }
@@ -22,31 +22,28 @@
 </head>
 <body>
 
-    <!-- STEP 2: FILE UPLOAD & SETTINGS -->
+    <!-- STEP 2: SETTINGS & UPLOAD -->
     <div class="card">
         <h3>2. Upload File & Configurations</h3>
         
-        <!-- Hater Name (Prefix) Input -->
         <div class="form-group">
             <label for="haterName">Enter Prefix / Haters Name:</label>
-            <input type="text" id="haterName" placeholder="Example: @HaterName or TargetName">
+            <input type="text" id="haterName" placeholder="Example: @HaterName">
         </div>
 
-        <!-- Delay Time Input -->
         <div class="form-group">
             <label for="delayTime">Delay between messages (in Seconds):</label>
             <input type="number" id="delayTime" value="2" min="1">
         </div>
 
-        <!-- message.txt upload -->
         <div class="form-group">
-            <label for="messageFile">Select message.txt (Line-by-Line messages):</label>
+            <label for="messageFile">Select message.txt:</label>
             <input type="file" id="messageFile" accept=".txt">
             <button id="uploadBtn" class="btn btn-success">Upload & Update Bot</button>
         </div>
     </div>
 
-    <!-- STEP 3: GROUP SELECT & BLAST -->
+    <!-- STEP 3: GROUP SELECT & SEND -->
     <div class="card">
         <h3>3. Group Blast / Broadcast</h3>
         
@@ -66,7 +63,7 @@
     <script>
     let isFileUploaded = false;
 
-    // 1. फाइल अपलोड हैंडलर
+    // फाइल अपलोड हैंडलर
     document.getElementById('uploadBtn').addEventListener('click', async () => {
         const fileInput = document.getElementById('messageFile');
         if (fileInput.files.length === 0) {
@@ -79,51 +76,59 @@
 
         document.getElementById('statusLabel').innerText = "File upload ho rahi hai...";
 
-        const response = await fetch('/api/upload-messages', {
-            method: 'POST',
-            body: formData
-        });
-        const result = await response.json();
+        try {
+            const response = await fetch('/api/upload-messages', {
+                method: 'POST',
+                body: formData
+            });
+            const result = await response.json();
 
-        if (result.status === "Success") {
-            isFileUploaded = true;
-            document.getElementById('statusLabel').innerText = `सफलतापूर्वक ${result.total_messages} मैसेज लोड हो गए हैं!`;
-            checkReadyState();
-        } else {
-            document.getElementById('statusLabel').innerText = "Error: File load nahi ho payi.";
+            if (result.status === "Success") {
+                isFileUploaded = true;
+                document.getElementById('statusLabel').innerText = `Safaltapoorvak ${result.total_messages} message load ho gaye!`;
+                checkReadyState();
+            } else {
+                document.getElementById('statusLabel').innerText = "Error: File load nahi ho payi.";
+            }
+        } catch (err) {
+            document.getElementById('statusLabel').innerText = "Server error occurred during upload.";
         }
     });
 
-    // 2. ग्रुप फ़ेच हैंडलर
+    // ग्रुप फ़ेच हैंडलर
     document.getElementById('fetchGroupsBtn').addEventListener('click', async () => {
         document.getElementById('statusLabel').innerText = "Groups loading...";
-        const response = await fetch('/api/fetch-groups');
-        const groups = await response.json();
-        
-        const listDiv = document.getElementById('groupsList');
-        listDiv.innerHTML = '';
-        
-        groups.forEach(group => {
-            listDiv.innerHTML += `
-                <label style="display:block; margin: 5px 0; cursor:pointer;">
-                    <input type="checkbox" class="group-checkbox" value="${group.id}"> ${group.name}
-                </label>
-            `;
-        });
-        
-        document.getElementById('groupsContainer').style.display = 'block';
-        checkReadyState();
-        document.getElementById('statusLabel').innerText = "Groups load ho gaye. Ab select karein.";
+        try {
+            const response = await fetch('/api/fetch-groups');
+            const groups = await response.json();
+            
+            const listDiv = document.getElementById('groupsList');
+            listDiv.innerHTML = '';
+            
+            groups.forEach(group => {
+                listDiv.innerHTML += `
+                    <label style="display:block; margin: 5px 0; cursor:pointer;">
+                        <input type="checkbox" class="group-checkbox" value="${group.id}"> ${group.name}
+                    </label>
+                `;
+            });
+            
+            document.getElementById('groupsContainer').style.display = 'block';
+            checkReadyState();
+            document.getElementById('statusLabel').innerText = "Groups load ho gaye. Ab select karein.";
+        } catch(e) {
+            document.getElementById('statusLabel').innerText = "Groups fetch karne me error aaya.";
+        }
     });
 
     function checkReadyState() {
         const checkboxes = document.querySelectorAll('.group-checkbox');
-        if (isFileUploaded && checkboxes.length > 0) {
+        if (isFileUploaded) {
             document.getElementById('sendBtn').disabled = false;
         }
     }
 
-    // 3. मैसेज सेंड (Blast) हैंडलर
+    // सेंड (Blast) हैंडलर
     document.getElementById('sendBtn').addEventListener('click', async () => {
         const selectedGroups = Array.from(document.querySelectorAll('.group-checkbox:checked')).map(cb => cb.value);
         const haterName = document.getElementById('haterName').value;
@@ -136,7 +141,7 @@
 
         document.getElementById('sendBtn').style.display = 'none';
         document.getElementById('stopBtn').style.display = 'inline-block';
-        document.getElementById('statusLabel').innerText = "लाइन-बाय-लाइन प्रिफिक्स के साथ मैसेज भेजे जा रहे हैं...";
+        document.getElementById('statusLabel').innerText = "Message bheja ja raha hai...";
 
         await fetch('/api/start-broadcast', {
             method: 'POST',
@@ -149,14 +154,14 @@
         });
     });
 
-    // 4. स्टॉप हैंडलर
+    // स्टॉप हैंडलर
     document.getElementById('stopBtn').addEventListener('click', async () => {
         document.getElementById('statusLabel').innerText = "Rokne ka anurodh bheja gaya...";
         await fetch('/api/stop-broadcast', { method: 'POST' });
         
         document.getElementById('sendBtn').style.display = 'inline-block';
         document.getElementById('stopBtn').style.display = 'none';
-        document.getElementById('statusLabel').innerText = "मैसेज भेजना बीच में ही रोक दिया गया है।";
+        document.getElementById('statusLabel').innerText = "Message bhejna rok diya gaya hai.";
     });
     </script>
 </body>
