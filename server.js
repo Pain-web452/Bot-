@@ -2,40 +2,56 @@ const express = require('express');
 const http = require('http');
 const { Server } = require('socket.io');
 const makeWASocket = require('@whiskeysockets/baileys').default;
-const { useMultiFileAuthState, DisconnectReason } = require('@whiskeysockets/baileys');
+const { useMultiFileAuthState, DisconnectReason, fetchLatestBaileysVersion } = require('@whiskeysockets/baileys');
 const P = require('pino');
 const path = require('path');
 
 const app = express();
 const server = http.createServer(app);
 const io = new Server(server);
-const PORT = process.env.PORT || 3000;  // Render 会自动设置 PORT
+const PORT = process.env.PORT || 3000;
 
 let sock;
 let isConnected = false;
+let pairingCodeRequested = false;
 
-// 使用绝对路径，配合 Render 的 Persistent Disk
 const SESSION_DIR = path.join(process.env.DATA_DIR || __dirname, 'auth_info');
 console.log('Session directory:', SESSION_DIR);
 
 async function connectToWhatsApp() {
     const { state, saveCreds } = await useMultiFileAuthState(SESSION_DIR);
-    
+    const { version } = await fetchLatestBaileysVersion();
+
     sock = makeWASocket({
+        version,
         auth: state,
-        printQRInTerminal: true,  // QR 会打印到 Render 日志
+        printQRInTerminal: false,   // QR बंद, Pairing Code चालू
         logger: P({ level: 'silent' }),
         browser: ["RK RAJA XWD", "Chrome", "1.0.0"]
     });
 
     sock.ev.on('creds.update', saveCreds);
 
-    sock.ev.on('connection.update', (update) => {
+    sock.ev.on('connection.update', async (update) => {
         const { connection, lastDisconnect, qr } = update;
-        
-        if (qr) {
-            console.log('QR Code generated. Check Render logs to scan.');
-            io.emit('qr_required', 'QR generated - check server logs');
+
+        // Pairing Code सिर्फ एक बार माँगें
+        if ((qr || connection === 'connecting') && !sock.authState.creds.registered && !pairingCodeRequested) {
+            pairingCodeRequested = true;
+            try {
+                const phoneNumber = process.env.PHONE_NUMBER; // Render env से
+                if (!phoneNumber) {
+                    console.log('❌ PHONE_NUMBER env variable सेट नहीं है');
+                    io.emit('log', 'PHONE_NUMBER env missing');
+                    return;
+                }
+                const code = await sock.requestPairingCode(phoneNumber);
+                console.log('🔑 Pairing Code:', code);
+                io.emit('pairing_code', code);
+            } catch (err) {
+                console.log('Pairing error:', err.message);
+                pairingCodeRequested = false;
+            }
         }
 
         if (connection === 'open') {
@@ -46,6 +62,7 @@ async function connectToWhatsApp() {
 
         if (connection === 'close') {
             isConnected = false;
+            pairingCodeRequested = false;
             const statusCode = lastDisconnect?.error?.output?.statusCode;
             if (statusCode !== DisconnectReason.loggedOut) {
                 console.log('Reconnecting...');
@@ -57,6 +74,22 @@ async function connectToWhatsApp() {
 
 connectToWhatsApp();
 
+// --- Group Fetch ---
+async function fetchGroups() {
+    if (!sock || !isConnected) return [];
+    try {
+        const groups = await sock.groupFetchAllParticipating();
+        return Object.values(groups).map(g => ({
+            id: g.id,
+            name: g.subject,
+            size: g.participants?.length || 0
+        }));
+    } catch (err) {
+        console.log('Group fetch error:', err.message);
+        return [];
+    }
+}
+
 // --- API Routes ---
 app.use(express.json());
 app.use(express.static('public'));
@@ -65,19 +98,34 @@ app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
-// 发送测试消息的 API
+app.get('/api/groups', async (req, res) => {
+    if (!isConnected) return res.status(503).json({ error: 'Not connected' });
+    const groups = await fetchGroups();
+    res.json(groups);
+});
+
 app.post('/api/send', async (req, res) => {
     if (!isConnected || !sock) {
         return res.status(503).json({ error: 'WhatsApp not connected' });
     }
-    
-    const { target, message } = req.body;
-    try {
-        await sock.sendMessage(target, { text: message });
-        res.json({ success: true });
-    } catch (err) {
-        res.status(500).json({ error: err.message });
+    const { targets, message } = req.body; // targets = array of group IDs
+    if (!targets || !targets.length) {
+        return res.status(400).json({ error: 'No targets selected' });
     }
+
+    let sent = 0, failed = 0;
+    for (const target of targets) {
+        try {
+            await sock.sendMessage(target, { text: message });
+            sent++;
+            io.emit('log', `✅ Sent to ${target}`);
+        } catch (err) {
+            failed++;
+            io.emit('log', `❌ Failed ${target}: ${err.message}`);
+        }
+        await new Promise(r => setTimeout(r, 3000)); // 3 सेकंड डिले
+    }
+    res.json({ success: true, sent, failed });
 });
 
 io.on('connection', (socket) => {
