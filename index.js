@@ -6,60 +6,50 @@ import path from 'path';
 
 const app = express();
 const PORT = process.env.PORT || 3000;
-const upload = multer({ dest: 'uploads/' });
 
+// Automatic uploads folder creation
+const UPLOADS_DIR = path.join(process.cwd(), 'uploads');
+if (!fs.existsSync(UPLOADS_DIR)) {
+    fs.mkdirSync(UPLOADS_DIR, { recursive: true });
+}
+
+const upload = multer({ dest: 'uploads/' });
 app.use(express.static('public'));
 
-let autoReplies = {};
+// Default Text (Agar koi file upload na ho)
+let globalReplyMessage = "Namaste! 🙏\nHumari automated service me aapka swagat hai.\nHum jald hi aap se sampark karenge.";
 let sock = null;
 
+// Simple file reading strategy
 function loadMessagesFromTxtFile() {
-    const filePath = path.join('uploads', 'messages.txt');
+    const filePath = path.join(UPLOADS_DIR, 'messages.txt');
     if (fs.existsSync(filePath)) {
         try {
-            const fileContent = fs.readFileSync(filePath, 'utf-8');
-            const lines = fileContent.split(\(/\r\)?\n/);
-            autoReplies = {}; 
-            let currentKeyword = null;
-            let currentMessageLines = [];
-
-            lines.forEach(line => {
-                const trimmedLine = line.trim();
-                if (trimmedLine.startsWith('[') && trimmedLine.endsWith(']')) {
-                    if (currentKeyword && currentMessageLines.length > 0) {
-                        autoReplies[currentKeyword] = currentMessageLines.join('\n').trim();
-                    }
-                    currentKeyword = trimmedLine.slice(1, -1).toLowerCase().trim();
-                    currentMessageLines = [];
-                } else {
-                    if (currentKeyword !== null) currentMessageLines.push(line);
-                }
-            });
-
-            if (currentKeyword && currentMessageLines.length > 0) {
-                autoReplies[currentKeyword] = currentMessageLines.join('\n').trim();
+            const fileContent = fs.readFileSync(filePath, 'utf-8').trim();
+            if (fileContent) {
+                globalReplyMessage = fileContent;
+                console.log('📚 TXT file text successfully loaded into memory.');
             }
-            console.log('📚 TXT Multi-line replies loaded.');
         } catch (error) {
-            console.error('❌ File error:', error.message);
+            console.error('File reading issue:', error.message);
         }
     }
 }
 
 app.post('/upload-messages', upload.single('messages'), (req, res) => {
     if (!req.file) return res.status(400).send('No file uploaded.');
-    const targetPath = path.join('uploads', 'messages.txt');
+    const targetPath = path.join(UPLOADS_DIR, 'messages.txt');
     try {
+        if (fs.existsSync(targetPath)) fs.unlinkSync(targetPath);
         fs.renameSync(req.file.path, targetPath);
         loadMessagesFromTxtFile();
-        res.send('Processed.');
+        res.send('Done');
     } catch (e) {
-        if (fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path);
-        res.status(500).send('Error.');
+        if (req.file && fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path);
+        res.status(500).send('Error');
     }
 });
 
-// API endpoint browser par code dikhane ke liye
 app.get('/get-code', async (req, res) => {
     const phone = req.query.phone;
     if (!phone) return res.json({ success: false, message: 'Phone number missing' });
@@ -73,7 +63,7 @@ app.get('/get-code', async (req, res) => {
             return res.json({ success: false, message: err.message });
         }
     } else {
-        return res.json({ success: false, message: 'Already connected or initializing.' });
+        return res.json({ success: false, message: 'Bot status not ready' });
     }
 });
 
@@ -94,20 +84,28 @@ async function startWhatsAppServer() {
             const shouldReconnect = lastDisconnect?.error?.output?.statusCode !== DisconnectReason.loggedOut;
             if (shouldReconnect) startWhatsAppServer();
         } else if (connection === 'open') {
-            console.log('🚀 WhatsApp Server Online 24/7!');
+            console.log('🚀 WhatsApp Server Connected Successfully!');
         }
     });
 
+    // ANY MESSAGE INCOMING LOGIC (NO KEYWORDS)
     sock.ev.on('messages.upsert', async (m) => {
-        const msg = m.messages;
-        if (!msg.key.fromMe && m.type === 'notify') {
-            const fromNumber = msg.key.remoteJid;
-            const incomingText = msg.message?.conversation || msg.message?.extendedTextMessage?.text;
-
-            if (incomingText) {
-                const cleanText = incomingText.toLowerCase().trim();
-                if (autoReplies[cleanText]) {
-                    await sock.sendMessage(fromNumber, { text: autoReplies[cleanText] });
+        const msgList = m.messages;
+        if (msgList && msgList.length > 0) {
+            const msg = msgList[0];
+            
+            // Checking message is received from other person (Not fromMe)
+            if (msg && !msg.key.fromMe && m.type === 'notify') {
+                const fromNumber = msg.key.remoteJid;
+                
+                // Skip status or group updates, target normal chats only
+                if (fromNumber && fromNumber.endsWith('@s.whatsapp.net')) {
+                    try {
+                        await sock.sendMessage(fromNumber, { text: globalReplyMessage });
+                        console.log(`✉️ Replied to incoming notification: ${fromNumber}`);
+                    } catch (sendErr) {
+                        console.error('Message delivery error:', sendErr.message);
+                    }
                 }
             }
         }
@@ -116,5 +114,5 @@ async function startWhatsAppServer() {
 
 app.listen(PORT, () => {
     console.log(`Web portal active on port ${PORT}`);
-    startWhatsAppServer();
+    startWhatsAppServer().catch(err => console.error("Fatal startup error:", err));
 });
