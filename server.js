@@ -25,34 +25,15 @@ async function connectToWhatsApp() {
     sock = makeWASocket({
         version,
         auth: state,
-        printQRInTerminal: false,   // QR बंद, Pairing Code चालू
+        printQRInTerminal: false,   // QR बंद
         logger: P({ level: 'silent' }),
         browser: ["RK RAJA XWD", "Chrome", "1.0.0"]
     });
 
     sock.ev.on('creds.update', saveCreds);
 
-    sock.ev.on('connection.update', async (update) => {
-        const { connection, lastDisconnect, qr } = update;
-
-        // Pairing Code सिर्फ एक बार माँगें
-        if ((qr || connection === 'connecting') && !sock.authState.creds.registered && !pairingCodeRequested) {
-            pairingCodeRequested = true;
-            try {
-                const phoneNumber = process.env.PHONE_NUMBER; // Render env से
-                if (!phoneNumber) {
-                    console.log('❌ PHONE_NUMBER env variable सेट नहीं है');
-                    io.emit('log', 'PHONE_NUMBER env missing');
-                    return;
-                }
-                const code = await sock.requestPairingCode(phoneNumber);
-                console.log('🔑 Pairing Code:', code);
-                io.emit('pairing_code', code);
-            } catch (err) {
-                console.log('Pairing error:', err.message);
-                pairingCodeRequested = false;
-            }
-        }
+    sock.ev.on('connection.update', (update) => {
+        const { connection, lastDisconnect } = update;
 
         if (connection === 'open') {
             isConnected = true;
@@ -98,6 +79,35 @@ app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
+// 🔑 Pairing Code API (UI से नंबर लेगा)
+app.post('/api/pairing-code', async (req, res) => {
+    const { phoneNumber } = req.body;
+    if (!phoneNumber) return res.status(400).json({ error: 'Number required' });
+
+    // साफ़ करो: सिर्फ digits
+    const cleanNumber = phoneNumber.replace(/\D/g, '');
+    if (cleanNumber.length < 10) return res.status(400).json({ error: 'Invalid number' });
+
+    try {
+        // अगर पहले से registered है तो कोड नहीं मिलेगा
+        if (sock.authState.creds.registered) {
+            return res.status(400).json({ error: 'Already connected' });
+        }
+
+        // socket तैयार होने का इंतज़ार करो
+        if (!sock?.ws?.isOpen) {
+            await new Promise(r => setTimeout(r, 2000));
+        }
+
+        const code = await sock.requestPairingCode(cleanNumber);
+        console.log('🔑 Pairing Code:', code);
+        res.json({ code });
+    } catch (err) {
+        console.log('Pairing error:', err.message);
+        res.status(500).json({ error: err.message });
+    }
+});
+
 app.get('/api/groups', async (req, res) => {
     if (!isConnected) return res.status(503).json({ error: 'Not connected' });
     const groups = await fetchGroups();
@@ -108,7 +118,7 @@ app.post('/api/send', async (req, res) => {
     if (!isConnected || !sock) {
         return res.status(503).json({ error: 'WhatsApp not connected' });
     }
-    const { targets, message } = req.body; // targets = array of group IDs
+    const { targets, message } = req.body;
     if (!targets || !targets.length) {
         return res.status(400).json({ error: 'No targets selected' });
     }
@@ -123,7 +133,7 @@ app.post('/api/send', async (req, res) => {
             failed++;
             io.emit('log', `❌ Failed ${target}: ${err.message}`);
         }
-        await new Promise(r => setTimeout(r, 3000)); // 3 सेकंड डिले
+        await new Promise(r => setTimeout(r, 3000));
     }
     res.json({ success: true, sent, failed });
 });
