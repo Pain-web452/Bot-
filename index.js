@@ -1,4 +1,6 @@
-import makeWASocket, { useMultiFileAuthState, DisconnectReason } from '@whiskeysockets/baileys';
+import makeWASocketModule, { useMultiFileAuthState, DisconnectReason } from '@whiskeysockets/baileys';
+const makeWASocket = makeWASocketModule.default || makeWASocketModule;
+
 import express from 'express';
 import multer from 'multer';
 import fs from 'fs';
@@ -70,7 +72,8 @@ app.get('/get-code', async (req, res) => {
 async function startWhatsAppServer() {
     const { state, saveCreds } = await useMultiFileAuthState('whatsapp_session');
     
-    sock = makeWASocket.default({
+    // Fixed initialization line here
+    sock = makeWASocket({
         auth: state,
         printQRInTerminal: false
     });
