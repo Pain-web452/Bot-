@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WhatsApp 24/7 Cloud Server</title>
+    <title>WhatsApp Group Automation</title>
     <style>
         body { font-family: Arial, sans-serif; margin: 40px; background-color: #f4f4f9; color: #333; }
         .container { max-width: 600px; margin: auto; background: white; padding: 25px; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); margin-bottom: 20px; }
@@ -11,6 +11,8 @@
         input[type="file"], input[type="text"] { margin: 15px 0; display: block; width: 90%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; }
         button { background-color: #25D366; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-size: 16px; font-weight: bold; }
         button:hover { background-color: #128C7E; }
+        .btn-broadcast { background-color: #007bff; }
+        .btn-broadcast:hover { background-color: #0056b3; }
         .status { margin-top: 15px; font-weight: bold; font-size: 16px; }
         .code-display { font-size: 24px; font-weight: bold; letter-spacing: 2px; color: #128C7E; background: #e6f9ed; padding: 10px; border-radius: 5px; display: inline-block; margin-top: 10px; }
     </style>
@@ -35,60 +37,64 @@
     <div class="status" id="uploadStatus"></div>
 </div>
 
+<div class="container">
+    <h2>3. Group Blast / Broadcast</h2>
+    <p>Pehle step 2 me file upload karein, fir niche diye gaye button par click karke apne sabhi WhatsApp Groups (GC) me message bhejein.</p>
+    <button id="broadcastBtn" class="button btn-broadcast">🚀 Send to All Groups</button>
+    <div class="status" id="broadcastStatus"></div>
+</div>
+
 <script>
-    // Pairing Code Request Logic
+    // Pairing Code Request
     document.getElementById('getPairingCodeBtn').addEventListener('click', async () => {
         const phone = document.getElementById('phoneNumber').value.trim();
         const statusDiv = document.getElementById('pairingStatus');
-        
-        if(!phone) {
-            alert('Kripya phone number dalein!');
-            return;
-        }
-
-        statusDiv.innerHTML = "Generating Pairing Code... Please wait.";
+        if(!phone) { alert('Kripya phone number dalein!'); return; }
+        statusDiv.innerHTML = "Generating Pairing Code...";
         statusDiv.style.color = "orange";
-
         try {
             const response = await fetch(`/get-code?phone=${phone}`);
             const data = await response.json();
-
             if (data.success) {
-                statusDiv.innerHTML = `🔑 APNA CODE: <div class="code-display">${data.code}</div><br><small>Is code ko WhatsApp -> Linked Devices -> Link with phone number instead me dalein.</small>`;
+                statusDiv.innerHTML = `🔑 APNA CODE: <div class="code-display">${data.code}</div>`;
                 statusDiv.style.color = "green";
             } else {
                 statusDiv.innerHTML = `❌ Error: ${data.message}`;
                 statusDiv.style.color = "red";
             }
-        } catch (error) {
-            statusDiv.innerHTML = "❌ Server se connect nahi ho paya.";
-            statusDiv.style.color = "red";
-        }
+        } catch (error) { statusDiv.innerHTML = "❌ Connection error."; statusDiv.style.color = "red"; }
     });
 
-    // File Upload Logic
+    // File Upload
     document.getElementById('uploadForm').addEventListener('submit', async (e) => {
         e.preventDefault();
         const fileInput = document.getElementById('messageFile');
         const statusDiv = document.getElementById('uploadStatus');
-        
         const formData = new FormData();
         formData.append('messages', fileInput.files[0]);
-
         statusDiv.innerText = "Uploading...";
         statusDiv.style.color = "orange";
-
         try {
             const response = await fetch('/upload-messages', { method: 'POST', body: formData });
             if (response.ok) {
                 statusDiv.innerText = "✅ TXT file uploaded and bot updated!";
                 statusDiv.style.color = "green";
-            } else {
-                statusDiv.innerText = "❌ Upload failed.";
-                statusDiv.style.color = "red";
-            }
+            } else { statusDiv.innerText = "❌ Upload failed."; statusDiv.style.color = "red"; }
+        } catch (error) { statusDiv.innerText = "❌ Connection error."; statusDiv.style.color = "red"; }
+    });
+
+    // Group Broadcast Execution
+    document.getElementById('broadcastBtn').addEventListener('click', async () => {
+        const statusDiv = document.getElementById('broadcastStatus');
+        statusDiv.innerText = "Sabhi groups ko fetch karke message bheja ja raha hai... Kripya thoda rukein.";
+        statusDiv.style.color = "orange";
+        try {
+            const response = await fetch('/broadcast-groups');
+            const data = await response.text();
+            statusDiv.innerText = `✅ ${data}`;
+            statusDiv.style.color = "green";
         } catch (error) {
-            statusDiv.innerText = "❌ Connection error.";
+            statusDiv.innerText = "❌ Message bhejane me koi dikkat aayi.";
             statusDiv.style.color = "red";
         }
     });
