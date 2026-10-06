@@ -2,7 +2,12 @@ const express = require('express');
 const http = require('http');
 const { Server } = require('socket.io');
 const makeWASocket = require('@whiskeysockets/baileys').default;
-const { useMultiFileAuthState, DisconnectReason, fetchLatestBaileysVersion } = require('@whiskeysockets/baileys');
+const {
+    useMultiFileAuthState,
+    DisconnectReason,
+    fetchLatestWaWebVersion,
+    Browsers
+} = require('@whiskeysockets/baileys');
 const P = require('pino');
 const path = require('path');
 
@@ -13,45 +18,68 @@ const PORT = process.env.PORT || 3000;
 
 let sock;
 let isConnected = false;
-let latestQR = null;
+let isConnecting = false;
+let reconnectAttempts = 0;
 
 const SESSION_DIR = path.join(process.env.DATA_DIR || __dirname, 'auth_info');
 console.log('Session directory:', SESSION_DIR);
 
 async function connectToWhatsApp() {
+    if (isConnecting) return;
+    isConnecting = true;
+
     const { state, saveCreds } = await useMultiFileAuthState(SESSION_DIR);
-    const { version } = await fetchLatestBaileysVersion();
+
+    // ✅ नया WhatsApp Web version (पुराना fetchLatestBaileysVersion bug देता है)
+    const { version, isLatest } = await fetchLatestWaWebVersion();
+    console.log(`Using WA v${version.join('.')}, isLatest: ${isLatest}`);
 
     sock = makeWASocket({
         version,
         auth: state,
         printQRInTerminal: false,
         logger: P({ level: 'silent' }),
-        browser: ["RK RAJA XWD", "Chrome", "1.0.0"]
+        browser: Browsers.ubuntu('Chrome'),   // ✅ compatible browser
+        connectTimeoutMs: 60000,
+        keepAliveIntervalMs: 25000,
+        retryRequestDelayMs: 2000,
+        generateHighQualityLinkPreview: false,
+        syncFullHistory: false
     });
 
     sock.ev.on('creds.update', saveCreds);
 
     sock.ev.on('connection.update', (update) => {
-        const { connection, lastDisconnect, qr } = update;
+        const { connection, lastDisconnect } = update;
 
-        if (qr) {
-            latestQR = qr;
-            console.log('QR generated (waiting for pairing code request)');
+        if (connection === 'connecting') {
+            io.emit('status', 'Connecting...');
+            console.log('Connecting...');
         }
 
         if (connection === 'open') {
             isConnected = true;
+            isConnecting = false;
+            reconnectAttempts = 0;
             io.emit('status', 'Running');
             console.log('✅ WhatsApp Connected!');
         }
 
         if (connection === 'close') {
             isConnected = false;
+            isConnecting = false;
             const statusCode = lastDisconnect?.error?.output?.statusCode;
+            console.log('Connection closed. Status code:', statusCode);
+
             if (statusCode !== DisconnectReason.loggedOut) {
-                console.log('Reconnecting...');
-                connectToWhatsApp();
+                reconnectAttempts++;
+                const delay = Math.min(5000 * reconnectAttempts, 30000);
+                console.log(`Reconnecting in ${delay / 1000}s...`);
+                io.emit('status', 'Reconnecting...');
+                setTimeout(connectToWhatsApp, delay);
+            } else {
+                console.log('Logged out. Delete auth_info and redeploy.');
+                io.emit('status', 'Logged Out');
             }
         }
     });
@@ -76,8 +104,21 @@ app.post('/api/pairing-code', async (req, res) => {
     if (cleanNumber.length < 10) return res.status(400).json({ error: 'Invalid number' });
 
     try {
-        if (sock.authState.creds.registered) {
-            return res.status(400).json({ error: 'Already connected. Logout from WhatsApp first.' });
+        if (sock?.authState?.creds?.registered) {
+            return res.status(400).json({ error: 'Already linked. Logout from WhatsApp first.' });
+        }
+
+        // Socket ready होने का इंतज़ार करो
+        let waited = 0;
+        while ((!sock?.ws?.isOpen) && waited < 15000) {
+            await new Promise(r => setTimeout(r, 500));
+            waited += 500;
+        }
+
+        if (!sock?.ws?.isOpen) {
+            return res.status(500).json({
+                error: 'WhatsApp not ready. Render service redeploy karke 30 sec ke andar try karo.'
+            });
         }
 
         console.log('Requesting pairing code for:', cleanNumber);
@@ -133,7 +174,7 @@ app.post('/api/send', async (req, res) => {
 
 io.on('connection', (socket) => {
     console.log('UI Connected');
-    socket.emit('status', isConnected ? 'Running' : 'Disconnected');
+    socket.emit('status', isConnected ? 'Running' : (isConnecting ? 'Connecting...' : 'Disconnected'));
 });
 
 server.listen(PORT, () => console.log(`Server running on port ${PORT}`));
