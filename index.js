@@ -9,7 +9,6 @@ import path from 'path';
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Automatic uploads folder creation
 const UPLOADS_DIR = path.join(process.cwd(), 'uploads');
 if (!fs.existsSync(UPLOADS_DIR)) {
     fs.mkdirSync(UPLOADS_DIR, { recursive: true });
@@ -18,11 +17,16 @@ if (!fs.existsSync(UPLOADS_DIR)) {
 const upload = multer({ dest: 'uploads/' });
 app.use(express.static('public'));
 
-// Default Text (Agar koi file upload na ho)
-let globalReplyMessage = "Namaste! 🙏\nHumari automated service me aapka swagat hai.\nHum jald hi aap se sampark karenge.";
+let globalReplyMessage = "Automated reply mode active.";
 let sock = null;
 
-// Simple file reading strategy
+// HARDCODED HATER LIST (Yahan aap unke numbers country code ke sath daal sakte hain)
+// Note: Sirf numbers dalein, jaise "919876543210". Inhi logo ko group ya inbox me automatic target kiya jayega.
+const HATER_LIST = [
+    "91XXXXXXXXXX", 
+    "91YYYYYYYYYY"
+];
+
 function loadMessagesFromTxtFile() {
     const filePath = path.join(UPLOADS_DIR, 'messages.txt');
     if (fs.existsSync(filePath)) {
@@ -72,7 +76,6 @@ app.get('/get-code', async (req, res) => {
 async function startWhatsAppServer() {
     const { state, saveCreds } = await useMultiFileAuthState('whatsapp_session');
     
-    // Fixed initialization line here
     sock = makeWASocket({
         auth: state,
         printQRInTerminal: false
@@ -87,25 +90,39 @@ async function startWhatsAppServer() {
             const shouldReconnect = lastDisconnect?.error?.output?.statusCode !== DisconnectReason.loggedOut;
             if (shouldReconnect) startWhatsAppServer();
         } else if (connection === 'open') {
-            console.log('🚀 WhatsApp Server Connected Successfully!');
+            console.log('🚀 WhatsApp Server Connected (Group + Hater Mode Online)!');
         }
     });
 
-    // ANY MESSAGE INCOMING LOGIC (NO KEYWORDS)
+    // INCOMING MESSAGES LOGIC
     sock.ev.on('messages.upsert', async (m) => {
         const msgList = m.messages;
         if (msgList && msgList.length > 0) {
             const msg = msgList[0];
             
-            // Checking message is received from other person (Not fromMe)
+            // Apne khud ke bheje messages ko ignore karein
             if (msg && !msg.key.fromMe && m.type === 'notify') {
-                const fromNumber = msg.key.remoteJid;
                 
-                // Skip status or group updates, target normal chats only
-                if (fromNumber && fromNumber.endsWith('@s.whatsapp.net')) {
+                const remoteJid = msg.key.remoteJid; // Yeh batata hai message kahan aaya (Inbox ya Group)
+                let senderNumber = "";
+
+                if (remoteJid.endsWith('@g.us')) {
+                    // Agar message GROUP me aaya hai, to asli sender ka number nikalna
+                    senderNumber = msg.key.participant ? msg.key.participant.split('@')[0] : "";
+                } else if (remoteJid.endsWith('@s.whatsapp.net')) {
+                    // Agar message DIRECT INBOX me aaya hai
+                    senderNumber = remoteJid.split('@')[0];
+                }
+
+                // Check karein ki kya sender ka number hamari HATER_LIST me shamil hai?
+                const isHater = HATER_LIST.includes(senderNumber);
+
+                if (isHater && remoteJid) {
                     try {
-                        await sock.sendMessage(fromNumber, { text: globalReplyMessage });
-                        console.log(`✉️ Replied to incoming notification: ${fromNumber}`);
+                        // Agar hater ne group me message kiya, to reply usi group me jayega.
+                        // Agar inbox me kiya, to reply inbox me jayega.
+                        await sock.sendMessage(remoteJid, { text: globalReplyMessage });
+                        console.log(`🎯 Target matched (${senderNumber}). Message sent to chat: ${remoteJid}`);
                     } catch (sendErr) {
                         console.error('Message delivery error:', sendErr.message);
                     }
