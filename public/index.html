@@ -1,168 +1,45 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WhatsApp Multi-Group Sender</title>
+    <title>WhatsApp Panel</title>
+    <script src="/socket.io/socket.io.js"></script>
     <style>
-        body { font-family: 'Segoe UI', sans-serif; padding: 20px; background-color: #f0f2f5; }
-        .card { background: white; padding: 25px; border-radius: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.08); max-width: 550px; margin: 15px auto; }
-        h3 { margin-top: 0; color: #075e54; }
-        .form-group { margin-bottom: 15px; }
-        label { display: block; font-weight: bold; margin-bottom: 5px; font-size: 14px; }
-        input[type="text"], input[type="number"], input[type="file"] { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; }
-        .btn { padding: 12px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; color: white; width: 100%; font-size: 15px; margin-top: 10px; }
-        .btn-success { background-color: #25d366; }
-        .btn-primary { background-color: #128c7e; }
-        .btn-danger { background-color: #d32f2f; }
-        .btn-secondary { background-color: #607d8b; }
-        #groupsList { max-height: 180px; overflow-y: auto; border: 1px solid #ddd; padding: 10px; border-radius: 5px; background: #fafafa; margin-top: 8px; }
-        #statusLabel { color: #e67e22; font-weight: bold; text-align: center; margin-top: 15px; font-size: 14px; }
+        body { background: #0a0a0a; color: #0f0; font-family: monospace; padding: 20px; }
+        .box { border: 1px solid #0f0; padding: 15px; margin-bottom: 15px; border-radius: 8px; }
+        input, textarea { background: #111; color: #0f0; border: 1px solid #0f0; padding: 8px; width: 100%; margin-bottom: 10px; box-sizing: border-box; }
+        button { background: #0f0; color: #000; border: none; padding: 10px 20px; cursor: pointer; font-weight: bold; }
+        #status { font-size: 18px; }
     </style>
 </head>
 <body>
-
-    <!-- STEP 2: SETTINGS & UPLOAD -->
-    <div class="card">
-        <h3>2. Upload File & Configurations</h3>
-        
-        <div class="form-group">
-            <label for="haterName">Enter Prefix / Haters Name:</label>
-            <input type="text" id="haterName" placeholder="Example: @HaterName">
-        </div>
-
-        <div class="form-group">
-            <label for="delayTime">Delay between messages (in Seconds):</label>
-            <input type="number" id="delayTime" value="2" min="1">
-        </div>
-
-        <div class="form-group">
-            <label for="messageFile">Select message.txt:</label>
-            <input type="file" id="messageFile" accept=".txt">
-            <button id="uploadBtn" class="btn btn-success">Upload & Update Bot</button>
-        </div>
+    <h2>🔒 WhatsApp Panel</h2>
+    <div class="box">
+        <h3>Status</h3>
+        <div id="status">Connecting...</div>
     </div>
-
-    <!-- STEP 3: GROUP SELECT & SEND -->
-    <div class="card">
-        <h3>3. Group Blast / Broadcast</h3>
-        
-        <button id="fetchGroupsBtn" class="btn btn-secondary">1. Fetch Groups List</button>
-        
-        <div id="groupsContainer" style="display: none; margin-top: 15px;">
-            <label>Select Target Groups:</label>
-            <div id="groupsList"></div>
-        </div>
-
-        <button id="sendBtn" class="btn btn-primary" style="margin-top: 15px;" disabled>🚀 Send to Selected Groups</button>
-        <button id="stopBtn" class="btn btn-danger" style="margin-top: 15px; display:none;">🛑 Stop Sending</button>
-        
-        <p id="statusLabel"></p>
+    <div class="box">
+        <h3>Send Test Message</h3>
+        <input id="target" placeholder="Group ID or Number (e.g., 123@g.us or 919876543210)" />
+        <textarea id="message" rows="3" placeholder="Message text"></textarea>
+        <button onclick="sendMessage()">Send</button>
     </div>
-
     <script>
-    let isFileUploaded = false;
-
-    // फाइल अपलोड हैंडलर
-    document.getElementById('uploadBtn').addEventListener('click', async () => {
-        const fileInput = document.getElementById('messageFile');
-        if (fileInput.files.length === 0) {
-            alert("Kripya ek .txt file select karein!");
-            return;
-        }
-
-        const formData = new FormData();
-        formData.append('messageFile', fileInput.files[0]);
-
-        document.getElementById('statusLabel').innerText = "File upload ho rahi hai...";
-
-        try {
-            const response = await fetch('/api/upload-messages', {
-                method: 'POST',
-                body: formData
-            });
-            const result = await response.json();
-
-            if (result.status === "Success") {
-                isFileUploaded = true;
-                document.getElementById('statusLabel').innerText = `Safaltapoorvak ${result.total_messages} message load ho gaye!`;
-                checkReadyState();
-            } else {
-                document.getElementById('statusLabel').innerText = "Error: File load nahi ho payi.";
-            }
-        } catch (err) {
-            document.getElementById('statusLabel').innerText = "Server error occurred during upload.";
-        }
-    });
-
-    // ग्रुप फ़ेच हैंडलर
-    document.getElementById('fetchGroupsBtn').addEventListener('click', async () => {
-        document.getElementById('statusLabel').innerText = "Groups loading...";
-        try {
-            const response = await fetch('/api/fetch-groups');
-            const groups = await response.json();
-            
-            const listDiv = document.getElementById('groupsList');
-            listDiv.innerHTML = '';
-            
-            groups.forEach(group => {
-                listDiv.innerHTML += `
-                    <label style="display:block; margin: 5px 0; cursor:pointer;">
-                        <input type="checkbox" class="group-checkbox" value="${group.id}"> ${group.name}
-                    </label>
-                `;
-            });
-            
-            document.getElementById('groupsContainer').style.display = 'block';
-            checkReadyState();
-            document.getElementById('statusLabel').innerText = "Groups load ho gaye. Ab select karein.";
-        } catch(e) {
-            document.getElementById('statusLabel').innerText = "Groups fetch karne me error aaya.";
-        }
-    });
-
-    function checkReadyState() {
-        const checkboxes = document.querySelectorAll('.group-checkbox');
-        if (isFileUploaded) {
-            document.getElementById('sendBtn').disabled = false;
-        }
-    }
-
-    // सेंड (Blast) हैंडलर
-    document.getElementById('sendBtn').addEventListener('click', async () => {
-        const selectedGroups = Array.from(document.querySelectorAll('.group-checkbox:checked')).map(cb => cb.value);
-        const haterName = document.getElementById('haterName').value;
-        const delayTime = document.getElementById('delayTime').value;
-
-        if (selectedGroups.length === 0) {
-            alert("Kripya kam se kam ek group select karein!");
-            return;
-        }
-
-        document.getElementById('sendBtn').style.display = 'none';
-        document.getElementById('stopBtn').style.display = 'inline-block';
-        document.getElementById('statusLabel').innerText = "Message bheja ja raha hai...";
-
-        await fetch('/api/start-broadcast', {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({ 
-                groups: selectedGroups,
-                haterName: haterName,
-                delayTime: parseInt(delayTime)
-            })
+        const socket = io();
+        socket.on('status', (s) => {
+            document.getElementById('status').innerText = s;
         });
-    });
-
-    // स्टॉप हैंडलर
-    document.getElementById('stopBtn').addEventListener('click', async () => {
-        document.getElementById('statusLabel').innerText = "Rokne ka anurodh bheja gaya...";
-        await fetch('/api/stop-broadcast', { method: 'POST' });
         
-        document.getElementById('sendBtn').style.display = 'inline-block';
-        document.getElementById('stopBtn').style.display = 'none';
-        document.getElementById('statusLabel').innerText = "Message bhejna rok diya gaya hai.";
-    });
+        async function sendMessage() {
+            const target = document.getElementById('target').value;
+            const message = document.getElementById('message').value;
+            const res = await fetch('/api/send', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ target, message })
+            });
+            const data = await res.json();
+            alert(data.success ? 'Sent!' : 'Error: ' + data.error);
+        }
     </script>
 </body>
 </html>
