@@ -1,21 +1,21 @@
 {
-  "name": "whatsapp-24-7-any-reply",
+  "name": "whatsapp-multi-group-sender",
   "version": "1.0.0",
-  "type": "module",
-  "description": "WhatsApp 24/7 Automated Server for Render Cloud",
+  "description": "WhatsApp Multi-Group Sender with Prefix and Stop Functionality",
   "main": "index.js",
+  "type": "module",
   "scripts": {
     "start": "node index.js"
   },
   "dependencies": {
-    "@whiskeysockets/baileys": "^6.5.0",
     "express": "^4.19.2",
     "multer": "^1.4.5-lts.1",
-    "qrcode-terminal": "^0.12.0"
+    "qrcode-terminal": "^0.12.0",
+    "whatsapp-web.js": "^1.26.0"
   },
   "engines": {
     "node": ">=18.0.0"
   },
-  "author": "Bot Developer",
+  "author": "",
   "license": "ISC"
 }
