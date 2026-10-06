@@ -1,4 +1,3 @@
-
 import makeWASocket, { useMultiFileAuthState, DisconnectReason } from '@whiskeysockets/baileys';
 import express from 'express';
 import multer from 'multer';
