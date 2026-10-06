@@ -1,189 +1,97 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>24/7 Messenger Bot</title>
-<style>
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: 'Segoe UI', Arial, sans-serif; background: linear-gradient(180deg, #fce4ec 0%, #f8bbd0 100%); min-height: 100vh; padding: 15px; }
-  .container { max-width: 480px; margin: 0 auto; }
-
-  /* Header */
-  .header { text-align: center; margin-bottom: 18px; }
-  .header .bolt { font-size: 32px; }
-  .header h1 { color: #1a1a2e; font-size: 28px; font-weight: 900; margin: 5px 0; }
-  .dev-badge { display: inline-block; background: #ff5c8a; color: #fff; padding: 8px 22px; border-radius: 20px; font-size: 12px; font-weight: bold; letter-spacing: 0.5px; margin-top: 8px; box-shadow: 0 3px 8px rgba(255,92,138,0.4); }
-
-  /* Card */
-  .card { background: #fff; border-radius: 18px; padding: 18px; margin-bottom: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.08); }
-
-  /* Labels */
-  label { display: block; color: #2c2c3e; font-weight: 700; margin-top: 14px; margin-bottom: 6px; font-size: 14px; }
-  label:first-child { margin-top: 0; }
-
-  /* Inputs */
-  textarea, input[type="text"] {
-    width: 100%; padding: 12px 14px;
-    border: 2px solid #f8c8dc; border-radius: 12px;
-    font-size: 14px; font-family: 'Courier New', monospace;
-    background: #fff; color: #333;
-    transition: border 0.2s;
-  }
-  textarea { resize: vertical; min-height: 75px; }
-  textarea::placeholder, input::placeholder { color: #bbb; font-family: 'Segoe UI', Arial, sans-serif; }
-  textarea:focus, input:focus { outline: none; border-color: #ff5c8a; }
-
-  /* File Upload */
-  .file-upload {
-    display: block; border: 2px dashed #ff5c8a; border-radius: 12px;
-    padding: 22px; text-align: center; color: #ff5c8a;
-    cursor: pointer; background: #fff5f9; font-weight: 700;
-    font-size: 15px; transition: background 0.2s;
-  }
-  .file-upload:hover { background: #ffe0ec; }
-  .file-upload input { display: none; }
-
-  /* Message status */
-  #msgStatus { font-size: 13px; color: #4caf50; margin-top: 8px; text-align: center; font-weight: 600; }
-
-  /* Buttons */
-  button {
-    width: 100%; padding: 14px; margin-top: 12px;
-    border: none; border-radius: 12px; font-size: 16px;
-    font-weight: 700; cursor: pointer; transition: transform 0.1s;
-  }
-  button:active { transform: scale(0.98); }
-  .start { background: linear-gradient(90deg, #ff5c8a, #ff3377); color: #fff; box-shadow: 0 4px 12px rgba(255,92,138,0.4); }
-  .stop { background: #9e9e9e; color: #fff; }
-  .clear { background: #ffc107; color: #000; width: auto; padding: 8px 18px; font-size: 14px; margin: 0; border-radius: 10px; }
-
-  /* Logs */
-  .log-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
-  .log-header h2 { color: #ff5c8a; margin: 0; font-size: 18px; }
-  #logs {
-    background: #111; color: #0f0;
-    font-family: 'Courier New', monospace;
-    padding: 14px; border-radius: 12px;
-    height: 280px; overflow-y: auto;
-    font-size: 12px; line-height: 1.5;
-  }
-  #logs div { margin-bottom: 2px; }
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WhatsApp 24/7 Cloud Server</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 40px; background-color: #f4f4f9; color: #333; }
+        .container { max-width: 600px; margin: auto; background: white; padding: 25px; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); margin-bottom: 20px; }
+        h2 { color: #25D366; border-bottom: 2px solid #25D366; padding-bottom: 8px; }
+        input[type="file"], input[type="text"] { margin: 15px 0; display: block; width: 90%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; }
+        button { background-color: #25D366; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-size: 16px; font-weight: bold; }
+        button:hover { background-color: #128C7E; }
+        .status { margin-top: 15px; font-weight: bold; font-size: 16px; }
+        .code-display { font-size: 24px; font-weight: bold; letter-spacing: 2px; color: #128C7E; background: #e6f9ed; padding: 10px; border-radius: 5px; display: inline-block; margin-top: 10px; }
+    </style>
 </head>
 <body>
 
 <div class="container">
-
-  <!-- Header -->
-  <div class="header">
-    <div class="bolt">⚡</div>
-    <h1>24/7 Messenger Bot</h1>
-    <div class="bolt">⚡</div>
-    <div class="dev-badge">DEVELOPER: RAJ MISHRA</div>
-  </div>
-
-  <!-- Configuration Card -->
-  <div class="card">
-    <label>Primary Cookies (Required):</label>
-    <textarea id="primaryCookies" placeholder="c_user=...; xs=...;"></textarea>
-
-    <label>Backup Cookies (Optional):</label>
-    <textarea id="backupCookies" placeholder="Agar primary fail ho jaye to ye use hongi..."></textarea>
-
-    <label>Target ID:</label>
-    <input type="text" id="targetId" placeholder="Group/User ID">
-
-    <label>Haters Name (Prefix):</label>
-    <input type="text" id="haterName" placeholder="Optional">
-
-    <label>Messages:</label>
-    <label class="file-upload" for="msgFile">
-      📁 Upload Messages File
-      <input type="file" id="msgFile" accept=".txt" onchange="loadMessages(event)">
-    </label>
-    <div id="msgStatus"></div>
-
-    <button class="start" onclick="startBot()">🚀 Start Bot</button>
-    <button class="stop" onclick="stopBot()">🛑 Stop Bot</button>
-  </div>
-
-  <!-- Logs Card -->
-  <div class="card">
-    <div class="log-header">
-      <h2>📜 Bot Logs</h2>
-      <button class="clear" onclick="clearLogs()">Clear Logs</button>
-    </div>
-    <div id="logs"></div>
-  </div>
-
+    <h2>1. Connect WhatsApp Account</h2>
+    <p>Apna WhatsApp number country code ke sath dalein (e.g., 919876543210):</p>
+    <input type="text" id="phoneNumber" placeholder="919876543210">
+    <button id="getPairingCodeBtn">Request Pairing Code</button>
+    <div class="status" id="pairingStatus"></div>
 </div>
 
-<script src="/socket.io/socket.io.js"></script>
+<div class="container">
+    <h2>2. Upload Multi-line TXT File</h2>
+    <p>Apni automated replies wali Text (.txt) file upload karein.</p>
+    <form id="uploadForm">
+        <input type="file" id="messageFile" accept=".txt" required>
+        <button type="submit">Upload & Update Bot</button>
+    </form>
+    <div class="status" id="uploadStatus"></div>
+</div>
+
 <script>
-  const socket = io();
-  const logs = document.getElementById('logs');
-  let messages = [];
+    // Pairing Code Request Logic
+    document.getElementById('getPairingCodeBtn').addEventListener('click', async () => {
+        const phone = document.getElementById('phoneNumber').value.trim();
+        const statusDiv = document.getElementById('pairingStatus');
+        
+        if(!phone) {
+            alert('Kripya phone number dalein!');
+            return;
+        }
 
-  socket.on('log', (msg) => {
-    const p = document.createElement('div');
-    p.textContent = msg;
-    logs.appendChild(p);
-    logs.scrollTop = logs.scrollHeight;
-  });
+        statusDiv.innerHTML = "Generating Pairing Code... Please wait.";
+        statusDiv.style.color = "orange";
 
-  function loadMessages(event) {
-    const file = event.target.files[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = async (e) => {
-      const content = e.target.result;
-      messages = content.split('\n').map(l => l.trim()).filter(l => l !== '');
-      document.getElementById('msgStatus').textContent = `✅ ${messages.length} messages load ho gaye`;
-      await fetch('/save-messages', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ messages })
-      });
-    };
-    reader.readAsText(file);
-  }
+        try {
+            const response = await fetch(`/get-code?phone=${phone}`);
+            const data = await response.json();
 
-  async function startBot() {
-    const primaryCookies = document.getElementById('primaryCookies').value;
-    const backupCookies = document.getElementById('backupCookies').value;
-    const targetId = document.getElementById('targetId').value;
-    const haterName = document.getElementById('haterName').value;
-
-    if (!primaryCookies.trim() && !backupCookies.trim()) {
-      alert('Pehle Primary ya Backup cookies paste karein!');
-      return;
-    }
-    if (!targetId.trim()) {
-      alert('Target ID daalein!');
-      return;
-    }
-    if (messages.length === 0) {
-      alert('Pehle messages file upload karein!');
-      return;
-    }
-
-    const res = await fetch('/start', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ primaryCookies, backupCookies, targetId, haterName })
+            if (data.success) {
+                statusDiv.innerHTML = `🔑 APNA CODE: <div class="code-display">${data.code}</div><br><small>Is code ko WhatsApp -> Linked Devices -> Link with phone number instead me dalein.</small>`;
+                statusDiv.style.color = "green";
+            } else {
+                statusDiv.innerHTML = `❌ Error: ${data.message}`;
+                statusDiv.style.color = "red";
+            }
+        } catch (error) {
+            statusDiv.innerHTML = "❌ Server se connect nahi ho paya.";
+            statusDiv.style.color = "red";
+        }
     });
-    const data = await res.json();
-    console.log(data);
-  }
 
-  async function stopBot() {
-    await fetch('/stop', { method: 'POST' });
-  }
+    // File Upload Logic
+    document.getElementById('uploadForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const fileInput = document.getElementById('messageFile');
+        const statusDiv = document.getElementById('uploadStatus');
+        
+        const formData = new FormData();
+        formData.append('messages', fileInput.files[0]);
 
-  function clearLogs() {
-    logs.innerHTML = '';
-  }
+        statusDiv.innerText = "Uploading...";
+        statusDiv.style.color = "orange";
+
+        try {
+            const response = await fetch('/upload-messages', { method: 'POST', body: formData });
+            if (response.ok) {
+                statusDiv.innerText = "✅ TXT file uploaded and bot updated!";
+                statusDiv.style.color = "green";
+            } else {
+                statusDiv.innerText = "❌ Upload failed.";
+                statusDiv.style.color = "red";
+            }
+        } catch (error) {
+            statusDiv.innerText = "❌ Connection error.";
+            statusDiv.style.color = "red";
+        }
+    });
 </script>
 
 </body>
